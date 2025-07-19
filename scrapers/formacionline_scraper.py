@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from datetime import datetime
+import sys
+sys.path.append('.')
+import config
 
 BASE_URL = "https://formacionline.com"
 START_URL = "https://formacionline.com/formacion/cursos/"
@@ -21,7 +24,7 @@ def _normalize_date(date_string):
 def _scrape_detail_page(course_url):
     """Función auxiliar para extraer datos de la página de detalle de un curso."""
     try:
-        response = requests.get(course_url)
+        response = requests.get(course_url, headers=config.HEADERS)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -38,7 +41,6 @@ def _scrape_detail_page(course_url):
         if details_section:
             strong_tags = details_section.find_all('strong')
             for tag in strong_tags:
-                # El texto que buscamos está después de la etiqueta <strong>, como un nodo de texto.
                 next_sibling_text = tag.next_sibling.strip() if tag.next_sibling and isinstance(tag.next_sibling, str) else ""
                 
                 if "Fecha de inicio:" in tag.text:
@@ -65,10 +67,13 @@ def scrape():
     """Scraper dinámico en dos fases para FormacionLine."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
     try:
-        response = requests.get(START_URL)
+        response = requests.get(START_URL, headers=config.HEADERS)
         response.raise_for_status()
+        soup_title = BeautifulSoup(response.content, 'html.parser').title
+        title_text = soup_title.string if soup_title else "No se encontró título"
+        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
     except requests.RequestException as e:
-        print(f"Error al acceder a la página principal de {CENTRO_NOMBRE}: {e}")
+        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
         return []
 
     soup = BeautifulSoup(response.content, 'html.parser')

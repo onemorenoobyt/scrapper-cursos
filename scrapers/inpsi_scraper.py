@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from datetime import datetime
+import sys
+sys.path.append('.')
+import config
 
 BASE_URL = "https://www.inpsi.com"
 START_URL = "https://www.inpsi.com/cursos/"
@@ -21,7 +24,7 @@ def _normalize_date(date_string):
 def _scrape_detail_page(course_url):
     """Función auxiliar para extraer datos de la página de detalle de un curso."""
     try:
-        response = requests.get(course_url)
+        response = requests.get(course_url, headers=config.HEADERS)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -29,10 +32,10 @@ def _scrape_detail_page(course_url):
         info_box = soup.find('div', class_='info-curso')
         
         sede = "No especificado"
-        if info_box.select_one('p:contains("Sede:") strong'):
-             sede = info_box.select_one('p:contains("Sede:") strong').text.strip()
+        sede_tag = info_box.select_one('p:contains("Sede:") strong')
+        if sede_tag:
+             sede = sede_tag.text.strip()
         
-        # Filtro clave: ignorar Candelaria y Online
         if "Candelaria" in sede or "Online" in sede:
             return None
 
@@ -68,11 +71,14 @@ def scrape():
 
         print(f"Procesando página de listado: {current_url}")
         try:
-            response = requests.get(current_url)
+            response = requests.get(current_url, headers=config.HEADERS)
             response.raise_for_status()
             urls_visitadas.add(current_url)
+            soup_title = BeautifulSoup(response.content, 'html.parser').title
+            title_text = soup_title.string if soup_title else "No se encontró título"
+            print(f"  -> Conexión exitosa. Título: {title_text}")
         except requests.RequestException as e:
-            print(f"Error al acceder a {current_url}: {e}")
+            print(f"  !!! ERROR DE CONEXIÓN en {current_url}: {e}")
             continue
 
         soup = BeautifulSoup(response.content, 'html.parser')

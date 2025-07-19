@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin
+import sys
+sys.path.append('.')
+import config
 
 BASE_URL = "https://cursostenerife.es/"
 CENTRO_NOMBRE = "CEP"
@@ -26,19 +29,21 @@ def scrape():
     """Extrae los cursos de CEP."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
     try:
-        response = requests.get(BASE_URL)
+        response = requests.get(BASE_URL, headers=config.HEADERS)
         response.raise_for_status()
+        soup_title = BeautifulSoup(response.content, 'html.parser').title
+        title_text = soup_title.string if soup_title else "No se encontró título"
+        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
     except requests.RequestException as e:
-        print(f"Error al acceder a {BASE_URL}: {e}")
+        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
         return []
 
     soup = BeautifulSoup(response.content, 'html.parser')
     cursos_encontrados = []
     
-    # Buscamos la tabla que contiene los cursos
     tabla = soup.find('table')
     if not tabla:
-        print(f"No se encontró la tabla de cursos en {CENTRO_NOMBRE}.")
+        print(f"  !!! ERROR: No se encontró la tabla de cursos en {CENTRO_NOMBRE}.")
         return []
     
     rows = tabla.find('tbody').find_all('tr')
@@ -46,10 +51,9 @@ def scrape():
     for row in rows:
         try:
             cols = row.find_all('td')
-            if len(cols) < 5: # Si la fila no tiene suficientes columnas, la saltamos
+            if len(cols) < 5:
                 continue
 
-            # El filtro clave es la sede
             sede = cols[5].text.strip()
             if "SANTA CRUZ" not in sede.upper():
                 continue
@@ -65,13 +69,13 @@ def scrape():
                 "nombre": nombre,
                 "url": url_curso,
                 "inicio": _normalize_date(fecha_inicio_str),
-                "fin": "No disponible en listado", # Este dato no está en la tabla
+                "fin": "No disponible en listado",
                 "horario": horario,
                 "horas": int(horas_str) if horas_str.isdigit() else 0
             }
             cursos_encontrados.append(curso_data)
         except (AttributeError, IndexError, ValueError) as e:
-            print(f"Error al procesar una fila de {CENTRO_NOMBRE}: {e}")
+            print(f"  -> Error al procesar una fila de {CENTRO_NOMBRE}: {e}")
             continue
             
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")

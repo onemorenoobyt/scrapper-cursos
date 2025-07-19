@@ -13,7 +13,7 @@ st.set_page_config(
 
 # --- Título y Descripción de la App ---
 st.title("🎓 Agregador de Cursos SEPE en Tenerife")
-st.write("Directorio centralizado y actualizado automáticamente de cursos de formación en Santa Cruz de Tenerife.")
+st.write("Directorio centralizado y actualizado automáticamente de cursos de formación en Santa Cruz de Tenerife. Falta Eurocampus, CentroFormacionMaster, SomosViernes, Icadepro y Acción Laboral.")
 
 # --- Carga de Datos ---
 # @st.cache_data es un "decorador mágico" de Streamlit. Le dice a la app que solo vuelva a cargar el

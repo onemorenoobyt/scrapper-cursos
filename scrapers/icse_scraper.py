@@ -2,6 +2,9 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import sys
+sys.path.append('.')
+import config
 
 URL = "https://www.icse.es/cursos?type=2&island=Tenerife"
 CENTRO_NOMBRE = "ICSE"
@@ -18,10 +21,13 @@ def scrape():
     """Extrae los cursos de ICSE filtrando por Santa Cruz."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
     try:
-        response = requests.get(URL)
+        response = requests.get(URL, headers=config.HEADERS)
         response.raise_for_status()
+        soup_title = BeautifulSoup(response.content, 'html.parser').title
+        title_text = soup_title.string if soup_title else "No se encontró título"
+        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
     except requests.RequestException as e:
-        print(f"Error al acceder a {URL}: {e}")
+        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
         return []
 
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -29,7 +35,7 @@ def scrape():
     
     course_list = soup.find_all('div', class_='course-item')
     if not course_list:
-        print(f"No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
+        print(f"  !!! ERROR: No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
         return []
 
     for item in course_list:
@@ -53,7 +59,7 @@ def scrape():
                 }
                 cursos_encontrados.append(curso_data)
         except (AttributeError, IndexError, ValueError) as e:
-            print(f"Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
+            print(f"  -> Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
             continue
             
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")

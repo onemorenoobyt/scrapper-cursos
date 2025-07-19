@@ -2,6 +2,9 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+import sys
+sys.path.append('.')
+import config
 
 URL = "https://microsistemas.es/cursos-gratis-tenerife/"
 CENTRO_NOMBRE = "MicroSistemas"
@@ -20,10 +23,13 @@ def scrape():
     """Extrae los cursos de MicroSistemas."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
     try:
-        response = requests.get(URL)
+        response = requests.get(URL, headers=config.HEADERS)
         response.raise_for_status()
+        soup_title = BeautifulSoup(response.content, 'html.parser').title
+        title_text = soup_title.string if soup_title else "No se encontró título"
+        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
     except requests.RequestException as e:
-        print(f"Error al acceder a {URL}: {e}")
+        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
         return []
 
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -31,7 +37,7 @@ def scrape():
     
     course_list = soup.find_all('article', class_='elementor-post')
     if not course_list:
-        print(f"No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
+        print(f"  !!! ERROR: No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
         return []
 
     for item in course_list:
@@ -46,15 +52,15 @@ def scrape():
             horario = "No especificado"
 
             if "Inicio:" in meta_data and "Fin:" in meta_data:
-                fechas_part = meta_data.split(' - Fin: ')
-                inicio_part = fechas_part[0].replace('Inicio:', '').strip()
-                
-                # Dividimos la segunda parte para separar fecha de fin y horario
-                fin_horario_parts = fechas_part[1].split('Horario:')
-                fecha_inicio_str = inicio_part
-                fecha_fin_str = fin_horario_parts[0].strip()
-                if len(fin_horario_parts) > 1:
-                    horario = fin_horario_parts[1].strip()
+                # Usamos split en ' - ' para separar los bloques de fecha y horario
+                parts = [p.strip() for p in meta_data.split(' - ')]
+                for part in parts:
+                    if part.startswith("Inicio:"):
+                        fecha_inicio_str = part.replace("Inicio:", "").strip()
+                    elif part.startswith("Fin:"):
+                        fecha_fin_str = part.replace("Fin:", "").strip()
+                    elif part.startswith("Horario:"):
+                         horario = part.replace("Horario:", "").strip()
 
             elif "Horario:" in meta_data: # Para los cursos que solo tienen horario
                  horario = meta_data.split('Horario:')[1].strip()
@@ -70,7 +76,7 @@ def scrape():
             }
             cursos_encontrados.append(curso_data)
         except (AttributeError, IndexError, ValueError) as e:
-            print(f"Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
+            print(f"  -> Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
             continue
             
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")
