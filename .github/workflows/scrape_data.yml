@@ -1,0 +1,59 @@
+# Contenido de .github/workflows/scrape_data.yml
+
+# Dale un nombre a tu acción para que la reconozcas en GitHub
+name: Scrape Latest Course Data
+
+# Define CUÁNDO se debe ejecutar esta acción
+on:
+  # 1. De forma programada (usando formato cron)
+  schedule:
+    # Esto significa: "a los 0 minutos de la hora 6 UTC, todos los días".
+    # Es decir, a las 6 de la mañana UTC (7 u 8 AM en España, según el horario de verano).
+    # Puedes cambiar '6' por la hora que prefieras.
+    - cron: '0 6 * * *'
+  
+  # 2. De forma manual (muy útil para probar)
+  workflow_dispatch:
+    # Esto añade el botón "Run workflow" en la pestaña Actions.
+
+# Define QUÉ trabajos se van a ejecutar
+jobs:
+  scrape:
+    # El tipo de máquina virtual que usará GitHub para ejecutar el código
+    runs-on: ubuntu-latest
+
+    # Los pasos que ejecutará la máquina
+    steps:
+      # Paso 1: Descargar tu código desde el repositorio a la máquina virtual
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Paso 2: Instalar Python en la máquina virtual
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # Paso 3: Instalar las librerías de tu fichero requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Paso 4: Ejecutar nuestro script principal
+      - name: Run the scraper
+        run: python main.py
+
+      # Paso 5: Guardar los cambios (el CSV actualizado) en el repositorio
+      - name: Commit and push if there are changes
+        run: |
+          # Configura el "usuario" que hará el commit (es un bot)
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Añade el fichero CSV al área de staging
+          git add cursos_actualizados.csv
+          
+          # Este comando inteligente solo hace el commit si detecta cambios en el fichero.
+          # Si no hay cursos nuevos o actualizados, no hará nada.
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Actualización automática de datos de cursos" && git push)
