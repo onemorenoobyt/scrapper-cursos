@@ -1,19 +1,18 @@
 # Contenido de scrapers/auraformacion_scraper.py
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
-import sys
-sys.path.append('.')
-import config
 
 BASE_URL = "https://www.auraformacion.es"
 START_URL = "https://www.auraformacion.es/formacion.html"
 CENTRO_NOMBRE = "Aura Formación"
 
 def _normalize_date(date_string):
-    if "No especificado" in date_string:
-        return date_string
+    if "No especificado" in date_string: return date_string
     meses = {'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'}
     try:
         parts = date_string.lower().split(' de ')
@@ -24,61 +23,76 @@ def _normalize_date(date_string):
     except (ValueError, IndexError, KeyError):
         return "Formato de fecha no reconocido"
 
-def _scrape_detail_page(course_url):
+def _scrape_detail_page(driver, course_url):
     try:
-        response = requests.get(course_url, headers=config.HEADERS)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        center_info = soup.find('div', class_='course-center-info')
-        if not center_info or "TF" not in center_info.text:
+        driver.get(course_url)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
+        
+        center_info = driver.find_elements(By.CLASS_NAME, 'course-center-info')
+        if not any("TF" in info.text for info in center_info):
             return None
-        nombre = soup.find('h1').text.strip()
-        features = soup.find('ul', class_='course-features')
-        fecha_inicio_tag = features.find('strong', string="Fecha inicio:")
-        fecha_inicio_str = fecha_inicio_tag.find_next_sibling('span').text.strip() if fecha_inicio_tag else "No especificado"
-        fecha_fin_tag = features.find('strong', string="Fecha fin:")
-        fecha_fin_str = fecha_fin_tag.find_next_sibling('span').text.strip() if fecha_fin_tag else "No especificado"
-        horas_tag = features.find('strong', string="Horas totales:")
-        horas_str = horas_tag.find_next_sibling('span').text.replace('horas.', '').strip() if horas_tag else "0"
-        horario_tag = features.find('strong', string="Horario:")
-        horario = horario_tag.find_next_sibling('span').text.strip() if horario_tag else "No especificado"
-        return {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": course_url, "inicio": _normalize_date(fecha_inicio_str), "fin": _normalize_date(fecha_fin_str), "horario": horario, "horas": int(horas_str) if horas_str.isdigit() else 0}
-    except (requests.RequestException, AttributeError, IndexError) as e:
+
+        nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
+        features = driver.find_element(By.CLASS_NAME, 'course-features')
+        
+        fecha_inicio = "No especificado"
+        fecha_fin = "No especificado"
+        horas = "0"
+        horario = "No especificado"
+
+        items = features.find_elements(By.TAG_NAME, 'li')
+        for item in items:
+            text = item.text
+            if "Fecha inicio:" in text:
+                fecha_inicio = text.replace("Fecha inicio:", "").strip()
+            elif "Fecha fin:" in text:
+                fecha_fin = text.replace("Fecha fin:", "").strip()
+            elif "Horas totales:" in text:
+                horas = text.replace("Horas totales:", "").replace("horas.", "").strip()
+            elif "Horario:" in text:
+                horario = text.replace("Horario:", "").strip()
+        
+        return {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": course_url, "inicio": _normalize_date(fecha_inicio), "fin": _normalize_date(fecha_fin), "horario": horario, "horas": int(horas) if horas.isdigit() else 0}
+    except Exception as e:
         print(f"  -> Error procesando detalle del curso {course_url}: {e}")
         return None
 
 def scrape():
-    print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
-    try:
-        response = requests.get(START_URL, headers=config.HEADERS)
-        response.raise_for_status()
-        soup_title = BeautifulSoup(response.content, 'html.parser').title
-        title_text = soup_title.string if soup_title else "No se encontró título"
-        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
-    except requests.RequestException as e:
-        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
-        return []
-
-    soup = BeautifulSoup(response.content, 'html.parser')
-    links_a_visitar = []
-    course_items = soup.select('div.course-item-title h3 a')
-    for link in course_items:
-        full_url = urljoin(BASE_URL, link['href'])
-        if full_url not in links_a_visitar:
-             links_a_visitar.append(full_url)
-    if not links_a_visitar:
-        print(f"No se encontraron enlaces a cursos en {CENTRO_NOMBRE}.")
-        return []
-    print(f"Descubiertos {len(links_a_visitar)} enlaces a cursos. Procediendo a filtrar y extraer detalles...")
+    print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
-    for link in links_a_visitar:
-        curso_data = _scrape_detail_page(link)
-        if curso_data:
-            cursos_encontrados.append(curso_data)
+    
+    try:
+        driver.get(START_URL)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.course-item-title h3 a")))
+        print(f"  -> Conexión exitosa y contenido cargado en {CENTRO_NOMBRE}.")
+        
+        course_items = driver.find_elements(By.CSS_SELECTOR, 'div.course-item-title h3 a')
+        links_a_visitar = [item.get_attribute('href') for item in course_items]
+        
+        if not links_a_visitar:
+            print(f"No se encontraron enlaces a cursos en {CENTRO_NOMBRE}.")
+        else:
+            print(f"Descubiertos {len(links_a_visitar)} enlaces a cursos. Procediendo a filtrar y extraer detalles...")
+            for link in links_a_visitar:
+                curso_data = _scrape_detail_page(driver, link)
+                if curso_data:
+                    cursos_encontrados.append(curso_data)
+    
+    except Exception as e:
+        print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+    finally:
+        driver.quit()
+        
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos de Tenerife encontrados.")
     return cursos_encontrados
 
 if __name__ == '__main__':
     cursos = scrape()
-    for c in cursos:
-        print(c)
+    import pandas as pd
+    df = pd.DataFrame(cursos)
+    print(df)

@@ -1,112 +1,101 @@
 # Contenido de scrapers/formacionline_scraper.py
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
-import sys
-sys.path.append('.')
-import config
 
 BASE_URL = "https://formacionline.com"
 START_URL = "https://formacionline.com/formacion/cursos/"
 CENTRO_NOMBRE = "FormacionLine"
 
 def _normalize_date(date_string):
-    """Convierte fechas como '07/07/2025' a 'YYYY-MM-DD'."""
-    if "Próximamente" in date_string or not date_string:
-        return "Próximamente"
+    if "Próximamente" in date_string or not date_string: return "Próximamente"
     try:
         dt_object = datetime.strptime(date_string, '%d/%m/%Y')
         return dt_object.strftime('%Y-%m-%d')
     except ValueError:
         return "Formato de fecha no reconocido"
 
-def _scrape_detail_page(course_url):
-    """Función auxiliar para extraer datos de la página de detalle de un curso."""
+def _scrape_detail_page(driver, course_url):
     try:
-        response = requests.get(course_url, headers=config.HEADERS)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-
-        nombre = soup.find('h1', class_='course-title').text.strip()
+        driver.get(course_url)
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "course-title")))
         
-        horas_tag = soup.select_one('ul.course-features span.feature-text:contains("horas")')
-        horas = horas_tag.text.replace('horas', '').strip() if horas_tag else "0"
+        nombre = driver.find_element(By.CLASS_NAME, 'course-title').text.strip()
         
-        fecha_inicio = "No especificado"
-        fecha_fin = "No especificado"
-        horario = "No especificado"
+        horas_element = driver.find_element(By.CSS_SELECTOR, 'ul.course-features span.feature-text:contains("horas")')
+        horas = horas_element.text.replace('horas', '').strip() if horas_element else "0"
         
-        details_section = soup.find('div', id='tab-course-curriculum')
+        fecha_inicio, fecha_fin, horario = "No especificado", "No especificado", "No especificado"
+        
+        details_section = driver.find_element(By.ID, 'tab-course-curriculum')
         if details_section:
-            strong_tags = details_section.find_all('strong')
+            strong_tags = details_section.find_elements(By.TAG_NAME, 'strong')
             for tag in strong_tags:
-                next_sibling_text = tag.next_sibling.strip() if tag.next_sibling and isinstance(tag.next_sibling, str) else ""
-                
-                if "Fecha de inicio:" in tag.text:
-                    fecha_inicio = next_sibling_text
-                elif "Fecha de fin:" in tag.text:
-                    fecha_fin = next_sibling_text
-                elif "Horario:" in tag.text:
-                    horario = next_sibling_text
-
-        return {
-            "centro": CENTRO_NOMBRE,
-            "nombre": nombre,
-            "url": course_url,
-            "inicio": _normalize_date(fecha_inicio),
-            "fin": _normalize_date(fecha_fin),
-            "horario": horario,
-            "horas": int(horas) if horas.isdigit() else 0
-        }
-    except (requests.RequestException, AttributeError, IndexError) as e:
-        print(f"  -> Error al procesar detalle del curso {course_url}: {e}")
+                try:
+                    # Usamos JavaScript para obtener el texto del nodo siguiente
+                    next_sibling_text = driver.execute_script("return arguments[0].nextSibling.textContent", tag).strip()
+                    if "Fecha de inicio:" in tag.text:
+                        fecha_inicio = next_sibling_text
+                    elif "Fecha de fin:" in tag.text:
+                        fecha_fin = next_sibling_text
+                    elif "Horario:" in tag.text:
+                        horario = next_sibling_text
+                except:
+                    continue
+        
+        return {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": course_url, "inicio": _normalize_date(fecha_inicio), "fin": _normalize_date(fecha_fin), "horario": horario, "horas": int(horas) if horas.isdigit() else 0}
+    except Exception as e:
+        print(f"  -> Error procesando detalle del curso {course_url}: {e}")
         return None
 
 def scrape():
-    """Scraper dinámico en dos fases para FormacionLine."""
-    print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
-    try:
-        response = requests.get(START_URL, headers=config.HEADERS)
-        response.raise_for_status()
-        soup_title = BeautifulSoup(response.content, 'html.parser').title
-        title_text = soup_title.string if soup_title else "No se encontró título"
-        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
-    except requests.RequestException as e:
-        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
-        return []
-
-    soup = BeautifulSoup(response.content, 'html.parser')
-    
-    links_a_visitar = []
-    course_items = soup.find_all('div', class_='course-item')
-    
-    for item in course_items:
-        try:
-            location_tag = item.find('div', class_='meta-item-location')
-            if location_tag and "Santa Cruz de Tenerife" in location_tag.text:
-                link = item.find('a')['href']
-                full_url = urljoin(BASE_URL, link)
-                links_a_visitar.append(full_url)
-        except (AttributeError, IndexError):
-            continue
-            
-    if not links_a_visitar:
-        print(f"No se encontraron cursos para Santa Cruz en {CENTRO_NOMBRE}.")
-        return []
-        
-    print(f"Descubiertos {len(links_a_visitar)} cursos en Santa Cruz. Procediendo a extraer detalles...")
-
+    print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
-    for link in links_a_visitar:
-        curso_data = _scrape_detail_page(link)
-        if curso_data:
-            cursos_encontrados.append(curso_data)
-            
+    
+    try:
+        driver.get(START_URL)
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-item")))
+        print(f"  -> Conexión exitosa y contenido cargado en {CENTRO_NOMBRE}.")
+        
+        links_a_visitar = []
+        course_items = driver.find_elements(By.CLASS_NAME, 'course-item')
+        for item in course_items:
+            try:
+                location_tag = item.find_element(By.CLASS_NAME, 'meta-item-location')
+                if "Santa Cruz de Tenerife" in location_tag.text:
+                    link = item.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                    links_a_visitar.append(link)
+            except:
+                continue
+                
+        if not links_a_visitar:
+            print(f"No se encontraron cursos para Santa Cruz en {CENTRO_NOMBRE}.")
+        else:
+            print(f"Descubiertos {len(links_a_visitar)} cursos en Santa Cruz. Procediendo a extraer detalles...")
+            for link in links_a_visitar:
+                curso_data = _scrape_detail_page(driver, link)
+                if curso_data:
+                    cursos_encontrados.append(curso_data)
+                    
+    except Exception as e:
+        print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+    finally:
+        driver.quit()
+        
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos procesados.")
     return cursos_encontrados
 
 if __name__ == '__main__':
     cursos = scrape()
-    for c in cursos:
-        print(c)
+    import pandas as pd
+    df = pd.DataFrame(cursos)
+    print(df)
