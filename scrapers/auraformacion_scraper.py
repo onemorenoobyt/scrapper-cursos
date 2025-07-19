@@ -1,4 +1,4 @@
-# Contenido de scrapers/auraformacion_scraper.py
+# Contenido de scrapers/auraformacion_scraper.py (CORREGIDO)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 import sys
+import time
 sys.path.append('.')
 import config
 
@@ -30,9 +31,9 @@ def _scrape_detail_page(driver, course_url):
     try:
         driver.get(course_url)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        center_info = driver.find_elements(By.CLASS_NAME, 'course-center-info')
-        if not any("TF" in info.text for info in center_info):
-            return None
+        # --- ¡CAMBIO CLAVE! La comprobación de sede ahora es más robusta ---
+        if "Tenerife" not in driver.page_source:
+             return None
         nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
         features = driver.find_element(By.CLASS_NAME, 'course-features')
         fecha_inicio, fecha_fin, horas, horario = "No especificado", "No especificado", "0", "No especificado"
@@ -60,10 +61,22 @@ def scrape():
     try:
         driver.get(START_URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item-title h3 a")))
+
+        # --- ¡CAMBIO CLAVE! Aceptar cookies ---
+        try:
+            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll"))).click()
+            print("  -> Banner de cookies aceptado.")
+            time.sleep(2)
+        except Exception:
+            print("  -> No se encontró banner de cookies o no fue necesario.")
+
+        # --- ¡CAMBIO CLAVE! Selector de espera actualizado ---
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
-        course_items = driver.find_elements(By.CSS_SELECTOR, 'div.course-item-title h3 a')
+        
+        course_items = driver.find_elements(By.CSS_SELECTOR, 'div.course-item-title a')
         links_a_visitar = [item.get_attribute('href') for item in course_items]
+        
         if not links_a_visitar:
             print(f"No se encontraron enlaces a cursos en {CENTRO_NOMBRE}.")
         else:
@@ -78,9 +91,3 @@ def scrape():
         driver.quit()
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos de Tenerife encontrados.")
     return cursos_encontrados
-
-if __name__ == '__main__':
-    cursos = scrape()
-    import pandas as pd
-    df = pd.DataFrame(cursos)
-    print(df)

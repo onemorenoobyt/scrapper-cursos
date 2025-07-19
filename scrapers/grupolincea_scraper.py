@@ -1,4 +1,4 @@
-# Contenido de scrapers/grupolincea_scraper.py
+# Contenido de scrapers/grupolincea_scraper.py (CORREGIDO)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -17,32 +17,54 @@ CENTRO_NOMBRE = "Grupo Lincea"
 def _normalize_date(date_string):
     if "No especificado" in date_string: return date_string
     try:
-        dt_object = datetime.strptime(date_string, '%d/%m/%y')
+        # El formato ahora es DD/MM/YYYY
+        dt_object = datetime.strptime(date_string, '%d/%m/%Y')
         return dt_object.strftime('%Y-%m-%d')
     except ValueError:
-        return "Formato de fecha no reconocido"
+        # Intentar con formato corto de año si el anterior falla
+        try:
+            dt_object = datetime.strptime(date_string, '%d/%m/%y')
+            return dt_object.strftime('%Y-%m-%d')
+        except ValueError:
+            return "Formato de fecha no reconocido"
 
 def _scrape_detail_page(driver, course_url):
     try:
         driver.get(course_url)
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'FECHA DE INICIO')]")))
-        fecha_label = driver.find_element(By.XPATH, "//*[contains(text(), 'FECHA DE INICIO')]")
-        if not fecha_label: return None
-        fecha_data_tag = fecha_label.find_element(By.XPATH, "./following-sibling::h2")
-        if not fecha_data_tag or not fecha_data_tag.text.strip(): return None
+        # Esperar un elemento que sea probable que esté en la página de detalle
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
+        
         nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
-        fechas_str = fecha_data_tag.text.strip()
-        if '–' in fechas_str:
-            fecha_inicio_str, fecha_fin_str = [d.strip() for d in fechas_str.split('–')]
-        else:
-            fecha_inicio_str, fecha_fin_str = fechas_str, "No especificado"
-        horario = "No especificado"
+        
+        # La información de fecha ahora puede estar en diferentes elementos
+        fecha_inicio_str, fecha_fin_str, horario = "No especificado", "No especificado", "No especificado"
+        
+        # Búsqueda más robusta de la información
+        elements_with_text = driver.find_elements(By.XPATH, "//*[contains(text(), 'FECHA DE INICIO') or contains(text(), 'HORARIO')]")
+        
+        if not elements_with_text:
+            return None # Si no hay fecha, no nos interesa
+
+        # Extraer fecha
+        try:
+            fecha_label = driver.find_element(By.XPATH, "//*[contains(text(), 'FECHA DE INICIO')]")
+            fecha_data_tag = fecha_label.find_element(By.XPATH, "./following-sibling::*[1]")
+            fechas_str = fecha_data_tag.text.strip()
+            if '–' in fechas_str:
+                fecha_inicio_str, fecha_fin_str = [d.strip() for d in fechas_str.split('–')]
+            else:
+                fecha_inicio_str = fechas_str
+        except:
+             return None # Sin fecha de inicio, descartamos el curso
+
+        # Extraer horario (opcional)
         try:
             horario_label = driver.find_element(By.XPATH, "//*[contains(text(), 'HORARIO')]")
-            horario_data_tag = horario_label.find_element(By.XPATH, "./following-sibling::h2")
-            if horario_data_tag: horario = horario_data_tag.text.strip()
+            horario_data_tag = horario_label.find_element(By.XPATH, "./following-sibling::*[1]")
+            horario = horario_data_tag.text.strip()
         except:
-            pass # Si no hay horario, no es un error crítico
+            pass
+            
         return {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": course_url, "inicio": _normalize_date(fecha_inicio_str), "fin": _normalize_date(fecha_fin_str), "horario": horario, "horas": 0}
     except Exception as e:
         print(f"  -> Error procesando detalle del curso {course_url}: {e}")
@@ -66,15 +88,19 @@ def scrape():
             time.sleep(2)
         except Exception:
             print("  -> No se encontró banner de cookies o no fue necesario.")
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.elementor-post__card a")))
+
+        # --- ¡CAMBIO CLAVE! Selector de espera y búsqueda actualizado ---
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "article.elementor-post a")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
-        course_items = driver.find_elements(By.CSS_SELECTOR, 'div.elementor-post__card a')
+        
+        course_items = driver.find_elements(By.CSS_SELECTOR, 'article.elementor-post a')
         links_a_visitar = [item.get_attribute('href') for item in course_items]
+        
         if not links_a_visitar:
             print(f"No se encontraron enlaces a cursos en {CENTRO_NOMBRE}.")
         else:
-            print(f"Descubiertos {len(links_a_visitar)} enlaces a cursos. Procediendo a extraer detalles...")
-            unique_links = sorted(list(set(links_a_visitar))) # Evitamos duplicados
+            unique_links = sorted(list(set(links_a_visitar)))
+            print(f"Descubiertos {len(unique_links)} enlaces únicos a cursos. Procediendo a extraer detalles...")
             for link in unique_links:
                 curso_data = _scrape_detail_page(driver, link)
                 if curso_data:
@@ -85,9 +111,3 @@ def scrape():
         driver.quit()
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos con fecha encontrados.")
     return cursos_encontrados
-
-if __name__ == '__main__':
-    cursos = scrape()
-    import pandas as pd
-    df = pd.DataFrame(cursos)
-    print(df)

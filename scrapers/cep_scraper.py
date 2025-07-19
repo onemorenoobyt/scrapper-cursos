@@ -1,4 +1,4 @@
-# Contenido de scrapers/cep_scraper.py
+# Contenido de scrapers/cep_scraper.py (CORREGIDO)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 from urllib.parse import urljoin
 import sys
+import time
 sys.path.append('.')
 import config
 
@@ -37,23 +38,37 @@ def scrape():
     try:
         driver.get(BASE_URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
+
+        # --- ¡CAMBIO CLAVE! Aceptar cookies ---
+        try:
+            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "cookie_action_close_header"))).click()
+            print("  -> Banner de cookies aceptado.")
+            time.sleep(2)
+        except Exception:
+            print("  -> No se encontró banner de cookies o no fue necesario.")
+
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.TAG_NAME, "table")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
+        
         tabla = driver.find_element(By.TAG_NAME, 'table')
         rows = tabla.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')
         if not rows:
             print(f"  !!! ERROR: No se encontraron filas en la tabla de cursos de {CENTRO_NOMBRE}.")
+        
         for row in rows:
             try:
                 cols = row.find_elements(By.TAG_NAME, 'td')
                 if len(cols) < 6: continue
+                
                 sede = cols[5].text.strip()
                 if "SANTA CRUZ" not in sede.upper(): continue
+                
                 fecha_inicio_str = cols[0].text.strip()
                 nombre = cols[1].text.strip()
                 url_curso = urljoin(BASE_URL, cols[1].find_element(By.TAG_NAME, 'a').get_attribute('href'))
                 horas_str = cols[2].text.strip()
                 horario = cols[4].text.strip()
+                
                 curso_data = {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_inicio_str), "fin": "No disponible en listado", "horario": horario, "horas": int(horas_str) if horas_str.isdigit() else 0}
                 cursos_encontrados.append(curso_data)
             except Exception as e:
@@ -65,9 +80,3 @@ def scrape():
         driver.quit()
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")
     return cursos_encontrados
-
-if __name__ == '__main__':
-    cursos = scrape()
-    import pandas as pd
-    df = pd.DataFrame(cursos)
-    print(df)
