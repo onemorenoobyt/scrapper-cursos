@@ -23,7 +23,7 @@ def _normalize_date(date_string):
         day = int(parts[0])
         month = meses[parts[1]]
         year = int(parts[2])
-        return f"{year}-{month:02d}-{day:02d}"
+        return f"{year}-{month}-{day:02d}"
     except (ValueError, IndexError, KeyError):
         return "Formato de fecha no reconocido"
 
@@ -31,7 +31,7 @@ def _scrape_detail_page(driver, course_url):
     try:
         driver.get(course_url)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        if "Tenerife" not in driver.page_source:
+        if "Tenerife" not in driver.page_source and "Tf" not in driver.page_source:
              return None
         nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
         features = driver.find_element(By.CLASS_NAME, 'course-features')
@@ -51,10 +51,12 @@ def _scrape_detail_page(driver, course_url):
 def scrape():
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
     try:
@@ -63,13 +65,13 @@ def scrape():
 
         try:
             cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")))
-            cookie_button.click()
+            driver.execute_script("arguments[0].click();", cookie_button)
             print("  -> Banner de cookies aceptado.")
             time.sleep(2)
         except Exception:
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item")))
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item a")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
         
         course_items = driver.find_elements(By.CSS_SELECTOR, 'div.course-item-title a')

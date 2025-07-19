@@ -1,4 +1,4 @@
-# Contenido de scrapers/afsformacion_scraper.py (CORREGIDO)
+# Contenido de scrapers/afsformacion_scraper.py (VERSIÓN FINAL)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -25,12 +25,11 @@ def _normalize_date(date_string):
 def scrape():
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options.add_argument('--headless=new') # Usar el nuevo modo headless
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"]) # Ocultar logs de DevTools
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
@@ -38,20 +37,22 @@ def scrape():
     try:
         driver.get(URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
-        time.sleep(3)
-
+        
         try:
-            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn"))).click()
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn")))
+            driver.execute_script("arguments[0].click();", cookie_button) # Clic con JS, más fiable
             print("  -> Banner de cookies aceptado.")
-            time.sleep(3)
+            time.sleep(2)
         except Exception:
-            print("  -> No se encontró banner de cookies o no fue necesario.")
+            print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2);")
+        time.sleep(1)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        print("  -> Scroll hacia el final de la página realizado.")
+        print("  -> Scroll a la página realizado para cargar contenido dinámico.")
         time.sleep(3)
 
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.elementor-post")))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.elementor-post .elementor-post__title a")))
         print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
 
         course_list = driver.find_elements(By.CSS_SELECTOR, "article.elementor-post")
@@ -61,25 +62,27 @@ def scrape():
         print(f"  -> {len(course_list)} tarjetas de curso encontradas. Procesando...")
         for item in course_list:
             try:
-                nombre = item.find_element(By.CLASS_NAME, "elementor-post__title").text.strip()
-                url_curso = item.find_element(By.TAG_NAME, "a").get_attribute('href')
-                meta_data_elements = item.find_elements(By.CLASS_NAME, 'elementor-icon-list-items')
-                if not meta_data_elements: continue
+                nombre_element = item.find_element(By.CLASS_NAME, "elementor-post__title")
+                nombre = nombre_element.text.strip()
+                url_curso = nombre_element.find_element(By.TAG_NAME, "a").get_attribute('href')
                 
-                lines = meta_data_elements[0].find_elements(By.TAG_NAME, 'li')
+                meta_container = item.find_element(By.CLASS_NAME, 'elementor-icon-list-items')
+                lines = meta_container.find_elements(By.TAG_NAME, 'li')
+                
                 fecha_str, horario, horas_str = "No especificado", "No especificado", "0"
                 
                 for line in lines:
                     text = line.text.strip()
-                    # --- ¡CAMBIO CLAVE! Usar 'text.replace' en lugar de 'line.replace' ---
                     if 'Inicio:' in text: fecha_str = text.replace('Inicio:', '').strip()
                     elif 'Horario:' in text: horario = text.replace('Horario:', '').strip()
-                    elif 'Duración:' in text: horas_str = text.replace('Duración:', '').replace('Horas', '').strip()
+                    elif 'Duración:' in text: horas_str = ''.join(filter(str.isdigit, text))
+
+                if not nombre: continue
 
                 curso_data = {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_str), "fin": "No disponible", "horario": horario, "horas": int(horas_str) if horas_str.isdigit() else 0}
                 cursos_encontrados.append(curso_data)
             except Exception as e:
-                print(f"    -> Error procesando una tarjeta de curso: {e}")
+                print(f"    -> ADVERTENCIA: No se pudo procesar una tarjeta de AFS. Razón: {e}")
                 continue
 
     except Exception as e:
