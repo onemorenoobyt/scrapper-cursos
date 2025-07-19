@@ -1,4 +1,4 @@
-# Contenido de scrapers/auraformacion_scraper.py (CORREGIDO)
+# Contenido de scrapers/auraformacion_scraper.py (VERSIÓN FINAL)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -23,7 +23,7 @@ def _normalize_date(date_string):
         day = int(parts[0])
         month = meses[parts[1]]
         year = int(parts[2])
-        return f"{year}-{month}-{day:02d}"
+        return f"{year}-{month:02d}-{day:02d}"
     except (ValueError, IndexError, KeyError):
         return "Formato de fecha no reconocido"
 
@@ -31,7 +31,6 @@ def _scrape_detail_page(driver, course_url):
     try:
         driver.get(course_url)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        # --- ¡CAMBIO CLAVE! La comprobación de sede ahora es más robusta ---
         if "Tenerife" not in driver.page_source:
              return None
         nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
@@ -62,15 +61,14 @@ def scrape():
         driver.get(START_URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
 
-        # --- ¡CAMBIO CLAVE! Aceptar cookies ---
         try:
-            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll"))).click()
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")))
+            cookie_button.click()
             print("  -> Banner de cookies aceptado.")
             time.sleep(2)
         except Exception:
-            print("  -> No se encontró banner de cookies o no fue necesario.")
+            print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
-        # --- ¡CAMBIO CLAVE! Selector de espera actualizado ---
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
         

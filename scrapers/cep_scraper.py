@@ -1,4 +1,4 @@
-# Contenido de scrapers/cep_scraper.py (CORREGIDO)
+# Contenido de scrapers/cep_scraper.py (VERSIÓN FINAL)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -22,7 +22,7 @@ def _normalize_date(date_string):
         day = int(parts[0])
         month = meses[parts[1]]
         year = int(parts[2])
-        return f"{year}-{month}-{day:02d}"
+        return f"{year}-{month:02d}-{day:02d}"
     except (ValueError, IndexError, KeyError):
         return "Formato de fecha no reconocido"
 
@@ -39,13 +39,13 @@ def scrape():
         driver.get(BASE_URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
 
-        # --- ¡CAMBIO CLAVE! Aceptar cookies ---
         try:
-            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "cookie_action_close_header"))).click()
-            print("  -> Banner de cookies aceptado.")
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "cookie_action_close_header_reject")))
+            cookie_button.click()
+            print("  -> Banner de cookies gestionado.")
             time.sleep(2)
         except Exception:
-            print("  -> No se encontró banner de cookies o no fue necesario.")
+            print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.TAG_NAME, "table")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
@@ -53,7 +53,7 @@ def scrape():
         tabla = driver.find_element(By.TAG_NAME, 'table')
         rows = tabla.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')
         if not rows:
-            print(f"  !!! ERROR: No se encontraron filas en la tabla de cursos de {CENTRO_NOMBRE}.")
+            print(f"  !!! ADVERTENCIA: No se encontraron filas en la tabla de cursos de {CENTRO_NOMBRE}.")
         
         for row in rows:
             try:

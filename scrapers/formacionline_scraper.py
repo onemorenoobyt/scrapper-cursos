@@ -1,4 +1,4 @@
-# Contenido de scrapers/formacionline_scraper.py
+# Contenido de scrapers/formacionline_scraper.py (VERSIÓN FINAL)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
+import time
 
 BASE_URL = "https://formacionline.com"
 START_URL = "https://formacionline.com/formacion/cursos/"
@@ -26,9 +27,13 @@ def _scrape_detail_page(driver, course_url):
         
         nombre = driver.find_element(By.CLASS_NAME, 'course-title').text.strip()
         
-        horas_element = driver.find_element(By.CSS_SELECTOR, 'ul.course-features span.feature-text:contains("horas")')
-        horas = horas_element.text.replace('horas', '').strip() if horas_element else "0"
-        
+        horas = "0"
+        try:
+            horas_element = driver.find_element(By.XPATH, "//span[contains(text(), 'horas')]")
+            horas = ''.join(filter(str.isdigit, horas_element.text))
+        except:
+             pass # Si no hay horas, no es un problema
+
         fecha_inicio, fecha_fin, horario = "No especificado", "No especificado", "No especificado"
         
         details_section = driver.find_element(By.ID, 'tab-course-curriculum')
@@ -36,13 +41,12 @@ def _scrape_detail_page(driver, course_url):
             strong_tags = details_section.find_elements(By.TAG_NAME, 'strong')
             for tag in strong_tags:
                 try:
-                    # Usamos JavaScript para obtener el texto del nodo siguiente
-                    next_sibling_text = driver.execute_script("return arguments[0].nextSibling.textContent", tag).strip()
-                    if "Fecha de inicio:" in tag.text:
+                    next_sibling_text = driver.execute_script("return arguments[0].nextSibling.textContent", tag).strip().replace(':',"")
+                    if "Fecha de inicio" in tag.text:
                         fecha_inicio = next_sibling_text
-                    elif "Fecha de fin:" in tag.text:
+                    elif "Fecha de fin" in tag.text:
                         fecha_fin = next_sibling_text
-                    elif "Horario:" in tag.text:
+                    elif "Horario" in tag.text:
                         horario = next_sibling_text
                 except:
                     continue
@@ -63,8 +67,18 @@ def scrape():
     
     try:
         driver.get(START_URL)
+        print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
+
+        try:
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn")))
+            cookie_button.click()
+            print("  -> Banner de cookies aceptado.")
+            time.sleep(2)
+        except Exception:
+            print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
+
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-item")))
-        print(f"  -> Conexión exitosa y contenido cargado en {CENTRO_NOMBRE}.")
+        print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
         
         links_a_visitar = []
         course_items = driver.find_elements(By.CLASS_NAME, 'course-item')
@@ -93,9 +107,3 @@ def scrape():
         
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos procesados.")
     return cursos_encontrados
-
-if __name__ == '__main__':
-    cursos = scrape()
-    import pandas as pd
-    df = pd.DataFrame(cursos)
-    print(df)

@@ -1,7 +1,12 @@
-# Contenido de scrapers/icse_scraper.py (CORREGIDO)
-import requests
-from bs4 import BeautifulSoup
+# Contenido de scrapers/icse_scraper.py (VERSIÓN FINAL - MIGRADO A SELENIUM)
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
+import time
 import sys
 sys.path.append('.')
 import config
@@ -10,76 +15,72 @@ URL = "https://www.icse.es/cursos?type=2&island=Tenerife"
 CENTRO_NOMBRE = "ICSE"
 
 def _normalize_date(date_string):
-    """Convierte fechas como '13/10/2025' a 'YYYY-MM-DD'."""
     try:
-        # La web ahora puede no tener fecha de fin, así que solo tomamos la primera
         dt_object = datetime.strptime(date_string.split(' - ')[0].strip(), '%d/%m/%Y')
         return dt_object.strftime('%Y-%m-%d')
     except (ValueError, IndexError):
         return "Formato de fecha no reconocido"
 
 def scrape():
-    """Extrae los cursos de ICSE filtrando por Santa Cruz."""
-    print(f"Iniciando scraper para {CENTRO_NOMBRE}...")
-    try:
-        response = requests.get(URL, headers=config.HEADERS)
-        response.raise_for_status()
-        soup_title = BeautifulSoup(response.content, 'html.parser').title
-        title_text = soup_title.string if soup_title else "No se encontró título"
-        print(f"  -> Conexión exitosa con {CENTRO_NOMBRE}. Título de la página: {title_text}")
-    except requests.RequestException as e:
-        print(f"  !!! ERROR DE CONEXIÓN en {CENTRO_NOMBRE}: {e}")
-        return []
-
-    soup = BeautifulSoup(response.content, 'html.parser')
+    print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
     
-    # --- ¡CAMBIO CLAVE! El selector de la lista de cursos ahora es 'course-item-wrapper' ---
-    course_list = soup.find_all('div', class_='course-item-wrapper')
-    if not course_list:
-        print(f"  !!! ERROR: No se encontró la lista de cursos en {CENTRO_NOMBRE} con el nuevo selector.")
-        return []
+    try:
+        driver.get(URL)
+        print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
 
-    for item in course_list:
         try:
-            # El filtro de sede sigue siendo válido, pero nos aseguramos de que la etiqueta exista
-            sede_tag = item.find('li', class_='course-locality')
-            if sede_tag and "STA. CRUZ DE TENERIFE" in sede_tag.text.upper():
-                
-                # --- ¡CAMBIO CLAVE! Selectores internos actualizados ---
-                title_anchor = item.find('h3', class_='course-title').find('a')
-                nombre = title_anchor.text.strip()
-                url_curso = title_anchor['href']
-                
-                # --- ¡CAMBIO CLAVE! La clase para la fecha ahora es 'course-date' ---
-                fechas_tag = item.find('span', class_='course-date')
-                fechas_str = fechas_tag.text.strip() if fechas_tag else "No especificado"
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")))
+            cookie_button.click()
+            print("  -> Banner de cookies aceptado.")
+            time.sleep(2)
+        except Exception:
+            print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
+        
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-item-wrapper")))
+        print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
+        course_list = driver.find_elements(By.CLASS_NAME, 'course-item-wrapper')
 
-                # La web ahora no siempre muestra fecha de fin en la lista
-                fechas_parts = [d.strip() for d in fechas_str.split(' - ')]
-                fecha_inicio_str = fechas_parts[0]
-                fecha_fin_str = fechas_parts[1] if len(fechas_parts) > 1 else "No disponible"
+        if not course_list:
+            print(f"  !!! ADVERTENCIA: No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
+            return []
 
-                curso_data = {
-                    "centro": CENTRO_NOMBRE,
-                    "nombre": nombre,
-                    "url": url_curso,
-                    "inicio": _normalize_date(fecha_inicio_str),
-                    "fin": _normalize_date(fecha_fin_str),
-                    "horario": "No disponible en listado",
-                    "horas": 0
-                }
-                cursos_encontrados.append(curso_data)
-        except Exception as e:
-            # Añadimos un print en el error para saber qué curso falló
-            print(f"  -> Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
-            continue
-            
+        for item in course_list:
+            try:
+                sede_tag = item.find_element(By.CLASS_NAME, 'course-locality')
+                if "STA. CRUZ DE TENERIFE" in sede_tag.text.upper():
+                    title_anchor = item.find_element(By.CSS_SELECTOR, 'h3.course-title a')
+                    nombre = title_anchor.text.strip()
+                    url_curso = title_anchor.get_attribute('href')
+                    
+                    fechas_tag = item.find_element(By.CLASS_NAME, 'course-date')
+                    fechas_str = fechas_tag.text.strip() if fechas_tag else "No especificado"
+
+                    fechas_parts = [d.strip() for d in fechas_str.split(' - ')]
+                    fecha_inicio_str = fechas_parts[0]
+                    fecha_fin_str = fechas_parts[1] if len(fechas_parts) > 1 else "No disponible"
+
+                    curso_data = {
+                        "centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso,
+                        "inicio": _normalize_date(fecha_inicio_str),
+                        "fin": _normalize_date(fecha_fin_str),
+                        "horario": "No disponible en listado", "horas": 0
+                    }
+                    cursos_encontrados.append(curso_data)
+            except Exception as e:
+                print(f"  -> Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
+                continue
+    
+    except Exception as e:
+        print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+    finally:
+        driver.quit()
+        
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")
     return cursos_encontrados
-
-if __name__ == '__main__':
-    cursos = scrape()
-    import pandas as pd
-    df = pd.DataFrame(cursos)
-    print(df)
