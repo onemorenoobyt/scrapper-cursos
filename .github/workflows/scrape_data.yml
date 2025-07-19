@@ -1,4 +1,4 @@
-# Contenido de .github/workflows/scrape_data.yml (VERSIÓN FINAL)
+# Contenido de .github/workflows/scrape_data.yml (VERSIÓN FINAL CORREGIDA)
 
 name: Scrape Latest Course Data
 
@@ -33,17 +33,16 @@ jobs:
       - name: Run the scraper
         run: python main.py
 
-      # --- NUEVO PASO DE DEPURACIÓN ---
       # Si el scraper falla, este paso se ejecuta y guarda los ficheros de depuración
       - name: Upload Debug Artifacts on Failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        # --- ¡AQUÍ ESTÁ EL CAMBIO! v3 a v4 ---
+        uses: actions/upload-artifact@v4 
         with:
           name: debug-artifacts
           path: |
             debug_screenshot.png
             debug_page_source.html
-      # ---------------------------------
 
       - name: Commit and push if there are changes
         run: |
