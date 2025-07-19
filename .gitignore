@@ -1,0 +1,26 @@
+# Contenido de .gitignore
+
+# 1. Entornos Virtuales
+# Ignora la carpeta del entorno virtual, que contiene miles de ficheros.
+venv/
+.venv/
+env/
+.env
+
+# 2. Ficheros de Cache de Python
+# Estos se generan automáticamente y no deben estar en el repositorio.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 3. Base de Datos Local
+# La base de datos se genera cada vez que se ejecuta el script.
+# No la necesitamos en el repositorio, ya que nuestra "base de datos" en la nube
+# será el fichero CSV.
+cursos_sepe.db
+
+# 4. Ficheros específicos de editores y sistemas operativos (Buena práctica)
+.vscode/
+.idea/
+.DS_Store
