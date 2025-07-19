@@ -5,7 +5,7 @@ name: Scrape Latest Course Data
 on:
   schedule:
     # Ejecuta el scraper todos los días a las 6:00 AM UTC.
-    - cron: '0 6 * * *'
+    - cron: '0 5 * * 1'
   
   workflow_dispatch:
     # Permite ejecutarlo manualmente desde la pestaña "Actions" de GitHub.
