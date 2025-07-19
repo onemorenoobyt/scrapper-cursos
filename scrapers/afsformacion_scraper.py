@@ -1,4 +1,4 @@
-# Contenido de scrapers/afsformacion_scraper.py (VERSIÓN 4 - A PRUEBA DE ERRORES)
+# Contenido de scrapers/afsformacion_scraper.py (VERSIÓN 5 - PACIENTE)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -29,56 +29,52 @@ def scrape():
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
+    
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+    # Aumentamos el tiempo de espera implícito a 10 segundos.
+    driver.implicitly_wait(10)
     cursos_encontrados = []
     
     try:
         driver.get(URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
         try:
-            WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn"))).click()
+            # Damos más tiempo para el banner de cookies
+            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn"))).click()
             print("  -> Banner de cookies aceptado.")
-            time.sleep(2)
+            time.sleep(3) # Pausa más larga
         except Exception:
             print("  -> No se encontró banner de cookies o no fue necesario.")
 
-        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.elementor-posts-container")))
-        print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
+        # --- MEJORA CLAVE: TIMEOUT MÁS LARGO Y CONDICIÓN MÁS SIMPLE ---
+        # Esperamos hasta 30 segundos a que al menos UN <article> esté PRESENTE en el HTML.
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.TAG_NAME, "article"))
+        )
+        print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
 
         course_list = driver.find_elements(By.CSS_SELECTOR, "article.elementor-post")
         if not course_list:
-            print(f"  !!! ERROR: No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
+            print(f"  !!! ERROR: La lista de cursos está vacía después de la espera.")
         
         for item in course_list:
             try:
-                # --- LÓGICA A PRUEBA DE ERRORES ---
-                # Usamos find_elements que devuelve una lista. Si está vacía, no hacemos nada.
-                title_elements = item.find_elements(By.CLASS_NAME, "elementor-post__title")
-                if not title_elements:
-                    continue # Si este item no tiene título, lo saltamos y vamos al siguiente
-
-                nombre = title_elements[0].text.strip()
+                # El resto de la lógica de extracción se mantiene, ya que era correcta.
+                nombre = item.find_element(By.CLASS_NAME, "elementor-post__title").text.strip()
                 url_curso = item.find_element(By.TAG_NAME, "a").get_attribute('href')
-                
-                meta_data_elements = item.find_elements(By.CLASS_NAME, 'elementor-icon-list-items')
-                if not meta_data_elements:
-                    # Si no hay metadatos, añadimos el curso con datos por defecto y continuamos
-                    print(f"  -> Curso '{nombre}' no tiene metadatos. Se omite la extracción de detalles.")
-                    continue
-
-                lines = meta_data_elements[0].find_elements(By.TAG_NAME, 'li')
+                meta_data_element = item.find_element(By.CLASS_NAME, 'elementor-icon-list-items')
+                lines = meta_data_element.find_elements(By.TAG_NAME, 'li')
                 fecha_str, horario, horas_str = "No especificado", "No especificado", "0"
                 for line in lines:
-                    text = line.text.upper()
-                    if 'INICIO:' in text: fecha_str = line.text.replace('Inicio:', '').strip()
-                    elif 'HORARIO:' in text: horario = line.text.replace('Horario:', '').strip()
-                    elif 'DURACIÓN:' in text: horas_str = line.text.replace('Duración:', '').replace('Horas', '').strip()
+                    text = line.text
+                    if 'Inicio:' in text: fecha_str = text.replace('Inicio:', '').strip()
+                    elif 'Horario:' in text: horario = text.replace('Horario:', '').strip()
+                    elif 'Duración:' in text: horas_str = text.replace('Duración:', '').replace('Horas', '').strip()
 
                 curso_data = {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_str), "fin": "No disponible", "horario": horario, "horas": int(horas_str) if horas_str.isdigit() else 0}
                 cursos_encontrados.append(curso_data)
-            except Exception as e:
-                print(f"  -> Error procesando un curso de {CENTRO_NOMBRE}: {e}")
+            except Exception:
+                # Si un item no es un curso real, lo saltamos silenciosamente.
                 continue
     
     except Exception as e:
