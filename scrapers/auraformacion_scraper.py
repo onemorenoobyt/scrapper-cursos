@@ -6,6 +6,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
+import sys
+sys.path.append('.')
+import config
 
 BASE_URL = "https://www.auraformacion.es"
 START_URL = "https://www.auraformacion.es/formacion.html"
@@ -27,31 +30,19 @@ def _scrape_detail_page(driver, course_url):
     try:
         driver.get(course_url)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
-        
         center_info = driver.find_elements(By.CLASS_NAME, 'course-center-info')
         if not any("TF" in info.text for info in center_info):
             return None
-
         nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
         features = driver.find_element(By.CLASS_NAME, 'course-features')
-        
-        fecha_inicio = "No especificado"
-        fecha_fin = "No especificado"
-        horas = "0"
-        horario = "No especificado"
-
+        fecha_inicio, fecha_fin, horas, horario = "No especificado", "No especificado", "0", "No especificado"
         items = features.find_elements(By.TAG_NAME, 'li')
         for item in items:
             text = item.text
-            if "Fecha inicio:" in text:
-                fecha_inicio = text.replace("Fecha inicio:", "").strip()
-            elif "Fecha fin:" in text:
-                fecha_fin = text.replace("Fecha fin:", "").strip()
-            elif "Horas totales:" in text:
-                horas = text.replace("Horas totales:", "").replace("horas.", "").strip()
-            elif "Horario:" in text:
-                horario = text.replace("Horario:", "").strip()
-        
+            if "Fecha inicio:" in text: fecha_inicio = text.replace("Fecha inicio:", "").strip()
+            elif "Fecha fin:" in text: fecha_fin = text.replace("Fecha fin:", "").strip()
+            elif "Horas totales:" in text: horas = text.replace("Horas totales:", "").replace("horas.", "").strip()
+            elif "Horario:" in text: horario = text.replace("Horario:", "").strip()
         return {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": course_url, "inicio": _normalize_date(fecha_inicio), "fin": _normalize_date(fecha_fin), "horario": horario, "horas": int(horas) if horas.isdigit() else 0}
     except Exception as e:
         print(f"  -> Error procesando detalle del curso {course_url}: {e}")
@@ -63,17 +54,16 @@ def scrape():
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
-    
     try:
         driver.get(START_URL)
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.course-item-title h3 a")))
-        print(f"  -> Conexión exitosa y contenido cargado en {CENTRO_NOMBRE}.")
-        
+        print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
+        WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item-title h3 a")))
+        print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
         course_items = driver.find_elements(By.CSS_SELECTOR, 'div.course-item-title h3 a')
         links_a_visitar = [item.get_attribute('href') for item in course_items]
-        
         if not links_a_visitar:
             print(f"No se encontraron enlaces a cursos en {CENTRO_NOMBRE}.")
         else:
@@ -82,12 +72,10 @@ def scrape():
                 curso_data = _scrape_detail_page(driver, link)
                 if curso_data:
                     cursos_encontrados.append(curso_data)
-    
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
     finally:
         driver.quit()
-        
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos de Tenerife encontrados.")
     return cursos_encontrados
 
