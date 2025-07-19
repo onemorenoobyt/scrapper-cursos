@@ -1,52 +1,50 @@
-# Contenido de .github/workflows/scrape_data.yml
+# Contenido de .github/workflows/scrape_data.yml (VERSIÓN FINAL)
 
 name: Scrape Latest Course Data
 
 on:
   schedule:
-    # Ejecuta el scraper todos los días a las 6:00 AM UTC.
-    - cron: '0 5 * * 1'
-  
+    - cron: '0 6 * * *'
   workflow_dispatch:
-    # Permite ejecutarlo manualmente desde la pestaña "Actions" de GitHub.
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    
-    # Otorga permisos de escritura al bot de la acción para que pueda hacer 'git push'.
     permissions:
       contents: write
 
     steps:
-      # Paso 1: Descargar tu código desde el repositorio a la máquina virtual.
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # --- NUEVO PASO AÑADIDO ---
-      # Paso 2: Instalar el navegador Google Chrome en la máquina virtual.
-      # Selenium lo necesita para poder ejecutarse.
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v1
-      # -------------------------
 
-      # Paso 3: Instalar Python en la máquina virtual.
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # Paso 4: Instalar todas las librerías de Python necesarias (incluyendo Selenium).
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Paso 5: Ejecutar nuestro script principal que lanza todos los scrapers.
       - name: Run the scraper
         run: python main.py
 
-      # Paso 6: Guardar el fichero CSV actualizado en el repositorio si ha habido cambios.
+      # --- NUEVO PASO DE DEPURACIÓN ---
+      # Si el scraper falla, este paso se ejecuta y guarda los ficheros de depuración
+      - name: Upload Debug Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-artifacts
+          path: |
+            debug_screenshot.png
+            debug_page_source.html
+      # ---------------------------------
+
       - name: Commit and push if there are changes
         run: |
           git config --local user.email "action@github.com"
