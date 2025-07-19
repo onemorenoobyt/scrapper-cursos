@@ -1,4 +1,4 @@
-# Contenido de scrapers/inpsi_scraper.py (VERSIÓN FINAL - MIGRADO A SELENIUM)
+# scrapers/inpsi_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -11,7 +11,6 @@ import sys
 sys.path.append('.')
 import config
 
-BASE_URL = "https://www.inpsi.com"
 START_URL = "https://www.inpsi.com/cursos/"
 CENTRO_NOMBRE = "INPSI"
 
@@ -59,18 +58,25 @@ def _scrape_detail_page(driver, course_url):
 def scrape():
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+    
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
     
     try:
         current_url = START_URL
+        urls_visitadas = set()
+        
         while current_url:
+            if current_url in urls_visitadas: break
             print(f"Procesando página de listado: {current_url}")
             driver.get(current_url)
+            urls_visitadas.add(current_url)
+            
             WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.curso h2.entry-title a")))
             
             course_links = [a.get_attribute('href') for a in driver.find_elements(By.CSS_SELECTOR, 'article.curso h2.entry-title a')]
@@ -84,7 +90,7 @@ def scrape():
                 next_page_link = driver.find_element(By.CSS_SELECTOR, 'a.next.page-numbers')
                 current_url = next_page_link.get_attribute('href')
             except:
-                current_url = None # No more pages
+                current_url = None
                 
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")

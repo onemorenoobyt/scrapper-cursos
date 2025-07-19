@@ -1,4 +1,4 @@
-# Contenido de scrapers/cep_scraper.py (VERSIÓN FINAL)
+# scrapers/cep_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -49,8 +49,7 @@ def scrape():
         except Exception:
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
-        # Esperar a que la tabla se cargue con contenido
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table tbody tr td")))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table tbody tr td a")))
         print(f"  -> Tabla de cursos encontrada y con contenido en {CENTRO_NOMBRE}.")
         
         tabla = driver.find_element(By.TAG_NAME, 'table')
@@ -61,7 +60,7 @@ def scrape():
         for row in rows:
             try:
                 cols = row.find_elements(By.TAG_NAME, 'td')
-                if len(cols) < 6: continue
+                if len(cols) < 6 or not cols[0].text.strip(): continue # Ignorar filas vacías
                 
                 sede = cols[5].text.strip()
                 if "SANTA CRUZ" not in sede.upper(): continue

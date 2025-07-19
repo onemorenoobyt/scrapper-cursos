@@ -1,4 +1,4 @@
-# Contenido de scrapers/microsistemas_scraper.py (VERSIÓN FINAL - MIGRADO A SELENIUM)
+# scrapers/microsistemas_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -24,10 +24,12 @@ def _normalize_date(date_string):
 def scrape():
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+    
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
     

@@ -1,4 +1,4 @@
-# Contenido de scrapers/formacionline_scraper.py (VERSIÓN FINAL)
+# scrapers/formacionline_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -7,8 +7,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 import time
+import sys
+sys.path.append('.')
+import config
 
-BASE_URL = "https://formacionline.com"
 START_URL = "https://formacionline.com/formacion/cursos/"
 CENTRO_NOMBRE = "FormacionLine"
 
@@ -32,7 +34,7 @@ def _scrape_detail_page(driver, course_url):
             horas_element = driver.find_element(By.XPATH, "//span[contains(text(), 'horas')]")
             horas = ''.join(filter(str.isdigit, horas_element.text))
         except:
-             pass # Si no hay horas, no es un problema
+             pass
 
         fecha_inicio, fecha_fin, horario = "No especificado", "No especificado", "No especificado"
         
@@ -59,9 +61,12 @@ def _scrape_detail_page(driver, course_url):
 def scrape():
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
     
@@ -71,13 +76,13 @@ def scrape():
 
         try:
             cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn")))
-            cookie_button.click()
+            driver.execute_script("arguments[0].click();", cookie_button)
             print("  -> Banner de cookies aceptado.")
             time.sleep(2)
         except Exception:
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-item")))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".course-item a .meta-item-location")))
         print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
         
         links_a_visitar = []

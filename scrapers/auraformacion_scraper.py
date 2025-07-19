@@ -1,4 +1,4 @@
-# Contenido de scrapers/auraformacion_scraper.py (VERSIÓN FINAL)
+# scrapers/auraformacion_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -11,7 +11,6 @@ import time
 sys.path.append('.')
 import config
 
-BASE_URL = "https://www.auraformacion.es"
 START_URL = "https://www.auraformacion.es/formacion.html"
 CENTRO_NOMBRE = "Aura Formación"
 
@@ -80,7 +79,7 @@ def scrape():
         if not links_a_visitar:
             print(f"No se encontraron enlaces a cursos en {CENTRO_NOMBRE}.")
         else:
-            print(f"Descubiertos {len(links_a_visitar)} enlaces a cursos. Procediendo a filtrar y extraer detalles...")
+            print(f"Descubiertos {len(links_a_visitar)} enlaces a cursos. Procediendo a extraer detalles...")
             for link in links_a_visitar:
                 curso_data = _scrape_detail_page(driver, link)
                 if curso_data:

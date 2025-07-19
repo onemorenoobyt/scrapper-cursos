@@ -1,4 +1,4 @@
-# Contenido de scrapers/afsformacion_scraper.py (VERSIÓN FINAL)
+# scrapers/afsformacion_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -25,11 +25,11 @@ def _normalize_date(date_string):
 def scrape():
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless=new') # Usar el nuevo modo headless
+    options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"]) # Ocultar logs de DevTools
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
@@ -40,42 +40,41 @@ def scrape():
         
         try:
             cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "wt-cli-accept-all-btn")))
-            driver.execute_script("arguments[0].click();", cookie_button) # Clic con JS, más fiable
+            driver.execute_script("arguments[0].click();", cookie_button)
             print("  -> Banner de cookies aceptado.")
             time.sleep(2)
         except Exception:
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2);")
-        time.sleep(1)
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        print("  -> Scroll a la página realizado para cargar contenido dinámico.")
+        print("  -> Scroll a la página realizado.")
         time.sleep(3)
 
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.elementor-post .elementor-post__title a")))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.elementor-post")))
         print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
 
         course_list = driver.find_elements(By.CSS_SELECTOR, "article.elementor-post")
-        if not course_list:
-            raise Exception("La lista de cursos está vacía después de la espera y el scroll.")
-        
         print(f"  -> {len(course_list)} tarjetas de curso encontradas. Procesando...")
+        
         for item in course_list:
             try:
                 nombre_element = item.find_element(By.CLASS_NAME, "elementor-post__title")
                 nombre = nombre_element.text.strip()
                 url_curso = nombre_element.find_element(By.TAG_NAME, "a").get_attribute('href')
                 
-                meta_container = item.find_element(By.CLASS_NAME, 'elementor-icon-list-items')
-                lines = meta_container.find_elements(By.TAG_NAME, 'li')
+                # --- CORRECCIÓN CLAVE ---
+                # El contenedor de metadatos ahora es '.elementor-post__meta-data'
+                meta_container = item.find_element(By.CLASS_NAME, 'elementor-post__meta-data')
+                meta_text = meta_container.text
                 
                 fecha_str, horario, horas_str = "No especificado", "No especificado", "0"
                 
-                for line in lines:
-                    text = line.text.strip()
-                    if 'Inicio:' in text: fecha_str = text.replace('Inicio:', '').strip()
-                    elif 'Horario:' in text: horario = text.replace('Horario:', '').strip()
-                    elif 'Duración:' in text: horas_str = ''.join(filter(str.isdigit, text))
+                if 'Inicio:' in meta_text:
+                    fecha_str = meta_text.split('Inicio:')[1].split('\n')[0].strip()
+                if 'Horario:' in meta_text:
+                    horario = meta_text.split('Horario:')[1].split('\n')[0].strip()
+                if 'Duración:' in meta_text:
+                    horas_str = ''.join(filter(str.isdigit, meta_text.split('Duración:')[1]))
 
                 if not nombre: continue
 
