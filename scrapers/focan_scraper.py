@@ -45,6 +45,9 @@ def scrape():
         except Exception:
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
             
+        driver.execute_script("window.scrollTo(0, 300);")
+        time.sleep(2)
+        
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "result-item")))
         print(f"  -> Contenido cargado en {CENTRO_NOMBRE}.")
 
@@ -75,15 +78,7 @@ def scrape():
                     elif "Horario:" in text:
                         horario = text.replace('Horario:', '').strip()
                 
-                curso_data = {
-                    "centro": CENTRO_NOMBRE,
-                    "nombre": nombre,
-                    "url": url_curso,
-                    "inicio": _normalize_date(fecha_inicio_str),
-                    "fin": "No disponible en listado",
-                    "horario": horario,
-                    "horas": 0
-                }
+                curso_data = { "centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_inicio_str), "fin": "No disponible en listado", "horario": horario, "horas": 0 }
                 cursos_encontrados.append(curso_data)
             except Exception as e:
                 print(f"  -> Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
@@ -91,6 +86,7 @@ def scrape():
     
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+        driver.save_screenshot(f"debug_screenshot_{CENTRO_NOMBRE.lower().replace(' ', '')}.png")
     finally:
         driver.quit()
         

@@ -63,13 +63,16 @@ def scrape():
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
 
         try:
-            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")))
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//input[@value='Permitir todas las Cookies']")))
             driver.execute_script("arguments[0].click();", cookie_button)
             print("  -> Banner de cookies aceptado.")
             time.sleep(2)
         except Exception:
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
-
+        
+        driver.execute_script("window.scrollTo(0, 500);")
+        time.sleep(2)
+        
         WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-item a")))
         print(f"  -> Contenedor de cursos encontrado y visible en {CENTRO_NOMBRE}.")
         
@@ -86,6 +89,7 @@ def scrape():
                     cursos_encontrados.append(curso_data)
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+        driver.save_screenshot(f"debug_screenshot_{CENTRO_NOMBRE.lower().replace(' ', '')}.png")
     finally:
         driver.quit()
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos de Tenerife encontrados.")

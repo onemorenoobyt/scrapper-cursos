@@ -36,18 +36,13 @@ def scrape():
     try:
         driver.get(URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
-
-        try:
-            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")))
-            driver.execute_script("arguments[0].click();", cookie_button)
-            print("  -> Banner de cookies aceptado.")
-            time.sleep(2)
-        except Exception:
-            print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
         
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "course-item-wrapper")))
-        print(f"  -> Contenedor de cursos encontrado en {CENTRO_NOMBRE}.")
-        course_list = driver.find_elements(By.CLASS_NAME, 'course-item-wrapper')
+        time.sleep(5) # Pausa generosa para que Livewire cargue el contenido
+        
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.course-card")))
+        print(f"  -> Contenido dinámico (Livewire) cargado en {CENTRO_NOMBRE}.")
+        
+        course_list = driver.find_elements(By.CSS_SELECTOR, 'div.course-card')
 
         if not course_list:
             print(f"  !!! ADVERTENCIA: No se encontró la lista de cursos en {CENTRO_NOMBRE}.")
@@ -55,13 +50,13 @@ def scrape():
 
         for item in course_list:
             try:
-                sede_tag = item.find_element(By.CLASS_NAME, 'course-locality')
+                sede_tag = item.find_element(By.CLASS_NAME, 'headquarter')
                 if "STA. CRUZ DE TENERIFE" in sede_tag.text.upper():
-                    title_anchor = item.find_element(By.CSS_SELECTOR, 'h3.course-title a')
+                    title_anchor = item.find_element(By.CSS_SELECTOR, 'h2.text-xl a')
                     nombre = title_anchor.text.strip()
                     url_curso = title_anchor.get_attribute('href')
                     
-                    fechas_tag = item.find_element(By.CLASS_NAME, 'course-date')
+                    fechas_tag = item.find_element(By.CSS_SELECTOR, 'ul > li:first-child')
                     fechas_str = fechas_tag.text.strip() if fechas_tag else "No especificado"
 
                     fechas_parts = [d.strip() for d in fechas_str.split(' - ')]
@@ -76,11 +71,11 @@ def scrape():
                     }
                     cursos_encontrados.append(curso_data)
             except Exception as e:
-                print(f"  -> Error al procesar un curso de {CENTRO_NOMBRE}: {e}")
                 continue
     
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+        driver.save_screenshot(f"debug_screenshot_{CENTRO_NOMBRE.lower().replace(' ', '')}.png")
     finally:
         driver.quit()
         

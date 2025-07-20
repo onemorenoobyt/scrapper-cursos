@@ -7,6 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 import time
+import sys
+sys.path.append('.')
+import config
 
 URL = "https://afsformacion.com/nuestros-cursos/desempleados/tenerife/"
 CENTRO_NOMBRE = "AFS Formación"
@@ -28,7 +31,7 @@ def scrape():
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+    options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
     options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
@@ -62,19 +65,21 @@ def scrape():
                 nombre = nombre_element.text.strip()
                 url_curso = nombre_element.find_element(By.TAG_NAME, "a").get_attribute('href')
                 
-                # --- CORRECCIÓN CLAVE ---
-                # El contenedor de metadatos ahora es '.elementor-post__meta-data'
-                meta_container = item.find_element(By.CLASS_NAME, 'elementor-post__meta-data')
-                meta_text = meta_container.text
+                datos_container = item.find_element(By.CLASS_NAME, "elementor-post__datos-curso")
+                campos = datos_container.find_elements(By.CLASS_NAME, "elementor-post__datos-curso__campo")
                 
-                fecha_str, horario, horas_str = "No especificado", "No especificado", "0"
-                
-                if 'Inicio:' in meta_text:
-                    fecha_str = meta_text.split('Inicio:')[1].split('\n')[0].strip()
-                if 'Horario:' in meta_text:
-                    horario = meta_text.split('Horario:')[1].split('\n')[0].strip()
-                if 'Duración:' in meta_text:
-                    horas_str = ''.join(filter(str.isdigit, meta_text.split('Duración:')[1]))
+                datos_dict = {}
+                for campo in campos:
+                    try:
+                        etiqueta = campo.find_element(By.CLASS_NAME, "elementor-post__datos-curso__campo__etiqueta").text.replace(':', '').strip()
+                        valor = campo.find_element(By.CLASS_NAME, "elementor-post__datos-curso__campo__valor").text.strip()
+                        datos_dict[etiqueta] = valor
+                    except:
+                        continue
+
+                fecha_str = datos_dict.get("Inicio", "No especificado")
+                horario = datos_dict.get("Horario", "No especificado")
+                horas_str = ''.join(filter(str.isdigit, datos_dict.get("Duración", "0")))
 
                 if not nombre: continue
 
@@ -86,9 +91,7 @@ def scrape():
 
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
-        driver.save_screenshot("debug_screenshot.png")
-        with open("debug_page_source.html", "w", encoding="utf-8") as f:
-            f.write(driver.page_source)
+        driver.save_screenshot(f"debug_screenshot_{CENTRO_NOMBRE.lower().replace(' ', '')}.png")
     finally:
         driver.quit()
         

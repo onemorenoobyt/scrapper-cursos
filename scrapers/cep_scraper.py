@@ -37,6 +37,7 @@ def scrape():
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
+    
     try:
         driver.get(BASE_URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
@@ -50,35 +51,41 @@ def scrape():
             print("  -> No se encontró o no fue necesario hacer clic en el banner de cookies.")
 
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table tbody tr td a")))
-        print(f"  -> Tabla de cursos encontrada y con contenido en {CENTRO_NOMBRE}.")
+        print(f"  -> Contenido de tablas encontrado en la página.")
         
-        tabla = driver.find_element(By.TAG_NAME, 'table')
-        rows = tabla.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')
-        if not rows:
-            print(f"  !!! ADVERTENCIA: No se encontraron filas en la tabla de cursos de {CENTRO_NOMBRE}.")
+        tablas = driver.find_elements(By.TAG_NAME, 'table')
+        print(f"  -> Se han encontrado {len(tablas)} tablas en total. Procesando cada una...")
         
-        for row in rows:
+        for num_tabla, tabla in enumerate(tablas):
             try:
-                cols = row.find_elements(By.TAG_NAME, 'td')
-                if len(cols) < 6 or not cols[0].text.strip(): continue # Ignorar filas vacías
-                
-                sede = cols[5].text.strip()
-                if "SANTA CRUZ" not in sede.upper(): continue
-                
-                fecha_inicio_str = cols[0].text.strip()
-                nombre = cols[1].text.strip()
-                url_curso = urljoin(BASE_URL, cols[1].find_element(By.TAG_NAME, 'a').get_attribute('href'))
-                horas_str = cols[2].text.strip()
-                horario = cols[4].text.strip()
-                
-                curso_data = {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_inicio_str), "fin": "No disponible en listado", "horario": horario, "horas": int(horas_str) if horas_str.isdigit() else 0}
-                cursos_encontrados.append(curso_data)
+                rows = tabla.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')
+                for row in rows:
+                    cols = row.find_elements(By.TAG_NAME, 'td')
+                    if len(cols) < 6:
+                        continue
+                    
+                    sede = cols[5].text.strip()
+                    if "SANTA CRUZ" not in sede.upper():
+                        continue
+                    
+                    fecha_inicio_str = cols[0].text.strip()
+                    nombre = cols[1].text.strip()
+                    url_curso = urljoin(BASE_URL, cols[1].find_element(By.TAG_NAME, 'a').get_attribute('href'))
+                    horas_str = cols[2].text.strip()
+                    horario = cols[4].text.strip()
+                    
+                    curso_data = {"centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_inicio_str), "fin": "No disponible en listado", "horario": horario, "horas": int(horas_str) if horas_str.isdigit() else 0}
+                    cursos_encontrados.append(curso_data)
             except Exception as e:
-                print(f"  -> Error al procesar una fila de {CENTRO_NOMBRE}: {e}")
+                print(f"    -> ERROR al procesar la Tabla #{num_tabla + 1}: {e}")
                 continue
+
     except Exception as e:
-        print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
+        print(f"\n  !!!!!! ERROR CRÍTICO EN EL SCRAPER {CENTRO_NOMBRE} !!!!!!")
+        print(f"  Razón: {e}")
+        driver.save_screenshot(f"debug_screenshot_{CENTRO_NOMBRE.lower().replace(' ', '')}.png")
     finally:
         driver.quit()
+        
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")
     return cursos_encontrados
