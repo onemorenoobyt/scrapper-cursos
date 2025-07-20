@@ -1,53 +1,46 @@
 id,centro_formacion,nombre_curso,url_curso,fecha_inicio,fecha_fin,horario,horas,last_scraped
-1,AFS Formación,Servicios de Restaurante,https://afsformacion.com/cursos/servicios-de-restaurante-2/,Inicio Inmediato,No disponible,08:00 a 14:00,605,2025-07-20 12:21:26
-2,AFS Formación,Atención Sociosanitaria a Personas Dependientes en Instituciones Sociales,https://afsformacion.com/cursos/atencion-sociosanitaria-a-personas-dependientes-en-instituciones-sociales-5/,2025-08-01,No disponible,08:00 a 14:00,475,2025-07-20 12:21:26
-3,AFS Formación,Operaciones Básicas de Restaurante y Bar,https://afsformacion.com/cursos/operaciones-basicas-de-restaurante-y-bar-4/,2025-08-01,No disponible,15:00 a 21:00,315,2025-07-20 12:21:26
-4,AFS Formación,Ofimática,https://afsformacion.com/cursos/ofimatica-2/,2025-09-01,No disponible,15:00 a 21:00,125,2025-07-20 12:21:26
-9,CEP,COMPETENCIAS DIGITALES BÁSICAS,https://cursostenerife.es/cursos/competencias-digitales-basicas/,2025-01-13,No disponible en listado,08:30 – 13:30,60,2025-07-20 12:21:26
-10,CEP,ALEMÁN A1,https://cursostenerife.es/cursos/aleman-a1/,2025-01-20,No disponible en listado,08:30 – 13:30,150,2025-07-20 12:21:26
-11,CEP,ASISTENCIA EN LA GESTIÓN DE PROCEDIMIENTOS TRIBUTARIOS,https://cursostenerife.es/cursos/asistencia-en-la-gestion-de-procedimientos-tributarios/,2025-01-20,No disponible en listado,08:30 – 14:30,700,2025-07-20 12:21:26
-12,CEP,GESTIÓN INTEGRADA DE RECURSOS HUMANOS,https://cursostenerife.es/cursos/gestion-integrada-de-recursos-humanos/,2025-02-05,No disponible en listado,15:00 – 21:00,670,2025-07-20 12:21:26
-13,CEP,HUELLA DE CARBONO DE PRODUCTO Y ORGANIZACIÓN,https://cursostenerife.es/cursos/huella-de-carbono-de-producto-y-organizacion/,2025-02-17,No disponible en listado,08:30 – 13:30,100,2025-07-20 12:21:26
-14,CEP,ORGANIZACIÓN Y GESTIÓN DE ALMACENES,https://cursostenerife.es/cursos/organizacion-y-gestion-de-almacenes/,2025-02-24,No disponible en listado,15:00 – 21:00,310,2025-07-20 12:21:26
-15,CEP,ALEMÁN A2,https://cursostenerife.es/cursos/aleman-a2/,2025-03-17,No disponible en listado,08:30 – 13:30,150,2025-07-20 12:21:26
-16,CEP,GESTIÓN AMBIENTAL,https://cursostenerife.es/cursos/gestion-ambiental/,2025-03-27,No disponible en listado,08:30 – 14:30,420,2025-07-20 12:21:26
-17,CEP,ALEMÁN B1,https://cursostenerife.es/cursos/aleman-b1/,2025-05-12,No disponible en listado,08:30 – 13:30,240,2025-07-20 12:21:26
-18,CEP,"VIGILANCIA, SEGURIDAD PRIVADA Y PROTECCIÓN DE PERSONAS",https://cursostenerife.es/cursos/vigilancia-seguridad-privada-y-proteccion-de-personas/,2025-05-15,No disponible en listado,15:00 – 21:00,290,2025-07-20 12:21:26
-19,CEP,ORGANIZACIÓN DEL TRANSPORTE Y LA DISTRIBUCIÓN,https://cursostenerife.es/cursos/organizacion-del-transporte-y-distribucion/,2025-05-26,No disponible en listado,08:30 – 14:30,340,2025-07-20 12:21:26
-20,CEP,INGLÉS B2,https://cursostenerife.es/cursos/ingles-b2/,2025-06-24,No disponible en listado,,240,2025-07-20 12:21:26
-21,CEP,TÉCNICO EN SOFTWARE OFIMÁTICO,https://cursostenerife.es/cursos/tecnico-en-software-ofimatico/,2025-07-21,No disponible en listado,08:30 – 13:30,350,2025-07-20 12:21:26
-22,CEP,TRABAJA EN LA NUBE ECLOUD,https://cursostenerife.es/cursos/trabaja-en-la-nube-ecloud/,2025-09-01,No disponible en listado,08:30 – 13:30,100,2025-07-20 12:21:26
-23,CEP,MODELOS DE NEGOCIO EN LA ECONOMÍA CIRCULAR,https://cursostenerife.es/cursos/modelos-de-negocio-en-la-economia-circular/,2025-09-08,No disponible en listado,08:30 – 13:30,80,2025-07-20 12:21:26
-24,CEP,FRANCÉS A2,https://cursostenerife.es/cursos/frances-a2/,2025-10-27,No disponible en listado,08:30 – 13:30,150,2025-07-20 12:21:26
-109,FormacionLine,ESPECIALISTA EN MARKETING DIGITAL,https://formacionline.com/courses/comm15-especialista-en-marketing-digital/,2025-07-17,2025-08-22,08:30 A 14:30,130,2025-07-20 12:21:26
-110,FormacionLine,GESTIÓN DE EQUIPOS,https://formacionline.com/courses/gestion-de-equipos/,2025-08-01,2025-08-14,16:00 a 20:00h,40,2025-07-20 12:21:26
-111,FormacionLine,PROMOCIÓN E INTERVENCIÓN SOCIEDUCATIVA CON PERSONAS CON DISCAPACIDAD,https://formacionline.com/courses/ssce0111-socieducativa-discapacidad/,2025-08-18,2025-10-24,08:30 A 14:30,395,2025-07-20 12:21:26
-112,FormacionLine,ACTUACIONES FRENTE AL ACOSO SEXUAL,https://formacionline.com/courses/actuaciones-frente-al-acoso-sexual/,2025-08-18,2025-08-20,16:00 a 20:00h,12,2025-07-20 12:21:26
-113,FormacionLine,ATENCIÓN SOCIOSANITARIA A PERSONAS DEPENDIENTES CON ALZHEIMER U OTRAS DEMENCIAS EN INSTITUCIONES SOCIALES,https://formacionline.com/courses/sscg01-alzaheimer/,2025-08-19,2025-09-16,08:30 A 14:30,100,2025-07-20 12:21:26
-114,FormacionLine,VIOLENCIA DE GÉNERO,https://formacionline.com/courses/violencia-de-genero-2/,2025-08-21,2025-09-08,16:00 a 20:00h,50,2025-07-20 12:21:26
-115,FormacionLine,MEJORA DE LA ACCIÓN SOCIAL A TRAVÉS DE LA TRANSFORMACIÓN DIGITAL,https://formacionline.com/courses/sscg08-transformacion-digital/,2025-09-18,2025-11-13,08:30 A 14:30,220,2025-07-20 12:21:26
-116,FormacionLine,GESTIÓN ADMINISTRATIVA Y ECONÓMICO-FINANCIERA DE PEQUEÑOS NEGOCIOS O MICROEMPRESAS,https://formacionline.com/courses/gestion-financiera-negocios-tnf/,2025-09-09,2025-10-20,16:00 a 20:00h,120,2025-07-20 12:21:26
-117,FormacionLine,ALEMÁN B1,https://formacionline.com/courses/ssce08-aleman-b1-tenerife/,2025-09-01,2025-10-31,09:00 A 15:00,240,2025-07-20 12:21:26
-127,ICSE,INGLÉS B2,https://www.icse.es/cursos/64,2025-07-23,2025-10-06,No disponible en listado,0,2025-07-20 12:21:26
-128,ICSE,INGLÉS B2,https://www.icse.es/cursos/85,2025-07-29,2025-10-10,No disponible en listado,0,2025-07-20 12:21:26
-129,ICSE,INGLÉS C1,https://www.icse.es/cursos/70,2025-10-13,2025-12-15,No disponible en listado,0,2025-07-20 12:21:26
-130,Grupo Lincea,No se puede acceder a este sitio web,https://grupolincea.es/ingles-a1-ingles-a2/,No especificado,No especificado,No especificado,0,2025-07-20 12:21:26
-132,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-administrativas-en-la-relacion-con-el-cliente/,Formato de fecha no reconocido,Formato de fecha no reconocido,15:00 a 21:00,0,2025-07-20 12:21:26
-133,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-auxiliares-de-comercio/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:21:26
-134,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-de-gestion-del-pequeno-comercio/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:21:26
-135,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-de-venta/,Formato de fecha no reconocido,Formato de fecha no reconocido,8.30 – 14.30,0,2025-07-20 12:21:26
-136,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-formacion-de-formadores-en-e-learning/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 – 14:30,0,2025-07-20 12:21:26
-137,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-gestion-comercial-de-ventas/,2025-08-04,2025-12-02,8:30 – 15:00,0,2025-07-20 12:21:26
-138,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-gestion-contable-y-gestion-administrativa-para-auditoria-2/,Formato de fecha no reconocido,Formato de fecha no reconocido,Por determinar,0,2025-07-20 12:21:26
-139,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-gestion-integrada-de-rrhh/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:21:26
-140,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-ingles-a1/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:21:26
-141,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-operaciones-auxiliares-de-servicios-administrativos/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:21:26
-142,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-seguridad-informatica/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:21:26
-143,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-servicios-de-bar-y-cafeteria/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 – 14:30,0,2025-07-20 12:21:26
-144,Grupo Lincea,EN ESTE CURSO APRENDERÁS,https://grupolincea.es/tnf-servicios-de-restaurante-2/,Formato de fecha no reconocido,Formato de fecha no reconocido,CURSO – SERVICIOS DE RESTAURANTE,0,2025-07-20 12:21:26
-145,Grupo Lincea,EN ESTE CURSO APRENDERÁS,https://grupolincea.es/tnf_new-atencion-sociosanitaria-de-personas-dependientes-en-instituciones/,Formato de fecha no reconocido,Formato de fecha no reconocido,CURSO – ATENCIÓN SOCIOSANITARIA DE PERSONAS DEPENDIENTES EN INSTITUCIONES SOCIALES,0,2025-07-20 12:21:26
-146,Grupo Lincea,EN ESTE CURSO APRENDERÁS,https://grupolincea.es/tnfnew-docencia-de-la-formacion-profesional-para-el-empleo/,No especificado,Formato de fecha no reconocido,"CURSO – HABILITACIÓN PARA LA DOCENCIA EN GRADOS A,B Y C DEL SISTEMA DE FORMACIÓN PROFESIONAL",0,2025-07-20 12:21:26
-45,Insforca,INGLÉS B1,https://www.insforca.com/cursos/ingles-b1/,2025-08-13,2025-10-15,No disponible en listado,265,2025-07-20 00:31:56
-46,Insforca,INGLÉS B2,https://www.insforca.com/cursos/ingles-b2-4/,2025-10-17,2025-12-19,No disponible en listado,265,2025-07-20 00:31:56
-47,Insforca,EXCEL AVANZADO Y POWER BI,https://www.insforca.com/cursos/excel-avanzado-y-power-bi/,2025-07-30,2025-09-10,No disponible en listado,175,2025-07-20 00:31:56
-48,Insforca,LA IGUALDAD ENTRE HOMBRES Y MUJERES EN LA NEGOCIACIÓN COLECTIVA: PLANES DE IGUALDAD,https://www.insforca.com/cursos/la-igualdad-entre-hombres-y-mujeres-en-la-negociacion-colectiva-planes-de-igualdad-2/,2025-10-09,2025-10-28,No disponible en listado,85,2025-07-20 00:31:56
+1,AFS Formación,Servicios de Restaurante,https://afsformacion.com/cursos/servicios-de-restaurante-2/,Inicio Inmediato,No disponible,08:00 a 14:00,605,2025-07-20 12:33:07
+2,AFS Formación,Atención Sociosanitaria a Personas Dependientes en Instituciones Sociales,https://afsformacion.com/cursos/atencion-sociosanitaria-a-personas-dependientes-en-instituciones-sociales-5/,2025-08-01,No disponible,08:00 a 14:00,475,2025-07-20 12:33:07
+3,AFS Formación,Operaciones Básicas de Restaurante y Bar,https://afsformacion.com/cursos/operaciones-basicas-de-restaurante-y-bar-4/,2025-08-01,No disponible,15:00 a 21:00,315,2025-07-20 12:33:07
+4,AFS Formación,Ofimática,https://afsformacion.com/cursos/ofimatica-2/,2025-09-01,No disponible,15:00 a 21:00,125,2025-07-20 12:33:07
+5,CEP,COMPETENCIAS DIGITALES BÁSICAS,https://cursostenerife.es/cursos/competencias-digitales-basicas/,2025-01-13,No disponible en listado,08:30 – 13:30,60,2025-07-20 12:33:07
+6,CEP,ALEMÁN A1,https://cursostenerife.es/cursos/aleman-a1/,2025-01-20,No disponible en listado,08:30 – 13:30,150,2025-07-20 12:33:07
+7,CEP,ASISTENCIA EN LA GESTIÓN DE PROCEDIMIENTOS TRIBUTARIOS,https://cursostenerife.es/cursos/asistencia-en-la-gestion-de-procedimientos-tributarios/,2025-01-20,No disponible en listado,08:30 – 14:30,700,2025-07-20 12:33:07
+8,CEP,GESTIÓN INTEGRADA DE RECURSOS HUMANOS,https://cursostenerife.es/cursos/gestion-integrada-de-recursos-humanos/,2025-02-05,No disponible en listado,15:00 – 21:00,670,2025-07-20 12:33:07
+9,CEP,HUELLA DE CARBONO DE PRODUCTO Y ORGANIZACIÓN,https://cursostenerife.es/cursos/huella-de-carbono-de-producto-y-organizacion/,2025-02-17,No disponible en listado,08:30 – 13:30,100,2025-07-20 12:33:07
+10,CEP,ORGANIZACIÓN Y GESTIÓN DE ALMACENES,https://cursostenerife.es/cursos/organizacion-y-gestion-de-almacenes/,2025-02-24,No disponible en listado,15:00 – 21:00,310,2025-07-20 12:33:07
+11,CEP,ALEMÁN A2,https://cursostenerife.es/cursos/aleman-a2/,2025-03-17,No disponible en listado,08:30 – 13:30,150,2025-07-20 12:33:07
+12,CEP,GESTIÓN AMBIENTAL,https://cursostenerife.es/cursos/gestion-ambiental/,2025-03-27,No disponible en listado,08:30 – 14:30,420,2025-07-20 12:33:07
+13,CEP,ALEMÁN B1,https://cursostenerife.es/cursos/aleman-b1/,2025-05-12,No disponible en listado,08:30 – 13:30,240,2025-07-20 12:33:07
+14,CEP,"VIGILANCIA, SEGURIDAD PRIVADA Y PROTECCIÓN DE PERSONAS",https://cursostenerife.es/cursos/vigilancia-seguridad-privada-y-proteccion-de-personas/,2025-05-15,No disponible en listado,15:00 – 21:00,290,2025-07-20 12:33:07
+15,CEP,ORGANIZACIÓN DEL TRANSPORTE Y LA DISTRIBUCIÓN,https://cursostenerife.es/cursos/organizacion-del-transporte-y-distribucion/,2025-05-26,No disponible en listado,08:30 – 14:30,340,2025-07-20 12:33:07
+16,CEP,INGLÉS B2,https://cursostenerife.es/cursos/ingles-b2/,2025-06-24,No disponible en listado,,240,2025-07-20 12:33:07
+17,CEP,TÉCNICO EN SOFTWARE OFIMÁTICO,https://cursostenerife.es/cursos/tecnico-en-software-ofimatico/,2025-07-21,No disponible en listado,08:30 – 13:30,350,2025-07-20 12:33:07
+18,CEP,TRABAJA EN LA NUBE ECLOUD,https://cursostenerife.es/cursos/trabaja-en-la-nube-ecloud/,2025-09-01,No disponible en listado,08:30 – 13:30,100,2025-07-20 12:33:07
+19,CEP,MODELOS DE NEGOCIO EN LA ECONOMÍA CIRCULAR,https://cursostenerife.es/cursos/modelos-de-negocio-en-la-economia-circular/,2025-09-08,No disponible en listado,08:30 – 13:30,80,2025-07-20 12:33:07
+20,CEP,FRANCÉS A2,https://cursostenerife.es/cursos/frances-a2/,2025-10-27,No disponible en listado,08:30 – 13:30,150,2025-07-20 12:33:07
+21,Grupo Lincea,INGLÉS A1 + INGLÉS A2,https://grupolincea.es/ingles-a1-ingles-a2/,No especificado,No especificado,No especificado,0,2025-07-20 12:33:07
+22,Grupo Lincea,TNF ACTIVIDADES ADMINISTRATIVAS EN LA RELACIÓN CON EL CLIENTE,https://grupolincea.es/tnf-actividades-administrativas-en-la-relacion-con-el-cliente/,Formato de fecha no reconocido,Formato de fecha no reconocido,15:00 a 21:00,0,2025-07-20 12:33:07
+23,Grupo Lincea,TNF ACTIVIDADES AUXILIARES DE COMERCIO,https://grupolincea.es/tnf-actividades-auxiliares-de-comercio/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:33:07
+24,Grupo Lincea,TNF ACTIVIDADES DE GESTIÓN DEL PEQUEÑO COMERCIO,https://grupolincea.es/tnf-actividades-de-gestion-del-pequeno-comercio/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:33:07
+25,Grupo Lincea,TNF ACTIVIDADES DE VENTA,https://grupolincea.es/tnf-actividades-de-venta/,Formato de fecha no reconocido,Formato de fecha no reconocido,8.30 – 14.30,0,2025-07-20 12:33:07
+26,Grupo Lincea,TNF FORMACIÓN DE FORMADORES EN E,https://grupolincea.es/tnf-formacion-de-formadores-en-e-learning/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 – 14:30,0,2025-07-20 12:33:07
+27,Grupo Lincea,TNF GESTIÓN COMERCIAL DE VENTAS,https://grupolincea.es/tnf-gestion-comercial-de-ventas/,2025-08-04,2025-12-02,8:30 – 15:00,0,2025-07-20 12:33:07
+28,Grupo Lincea,TNF GESTIÓN CONTABLE Y GESTIÓN ADMINISTRATIVA PARA AUDITORÍA,https://grupolincea.es/tnf-gestion-contable-y-gestion-administrativa-para-auditoria-2/,Formato de fecha no reconocido,Formato de fecha no reconocido,Por determinar,0,2025-07-20 12:33:07
+29,Grupo Lincea,TNF GESTIÓN INTEGRADA DE RRHH,https://grupolincea.es/tnf-gestion-integrada-de-rrhh/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:33:07
+30,Grupo Lincea,TNF INGLÉS A1,https://grupolincea.es/tnf-ingles-a1/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:33:07
+31,Grupo Lincea,TNF OPERACIONES AUXILIARES DE SERVICIOS ADMINISTRATIVOS,https://grupolincea.es/tnf-operaciones-auxiliares-de-servicios-administrativos/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:33:07
+32,Grupo Lincea,TNF SEGURIDAD INFORMÁTICA,https://grupolincea.es/tnf-seguridad-informatica/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:33:07
+33,Grupo Lincea,TNF SERVICIOS DE BAR Y CAFETERÍA,https://grupolincea.es/tnf-servicios-de-bar-y-cafeteria/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 – 14:30,0,2025-07-20 12:33:07
+34,Grupo Lincea,TNFnew SERVICIOS DE RESTAURANTE,https://grupolincea.es/tnf-servicios-de-restaurante-2/,Formato de fecha no reconocido,Formato de fecha no reconocido,CURSO – SERVICIOS DE RESTAURANTE,0,2025-07-20 12:33:07
+35,Grupo Lincea,TNF_new ATENCIÓN SOCIOSANITARIA DE PERSONAS DEPENDIENTES EN INSTITUCIONES,https://grupolincea.es/tnf_new-atencion-sociosanitaria-de-personas-dependientes-en-instituciones/,Formato de fecha no reconocido,Formato de fecha no reconocido,CURSO – ATENCIÓN SOCIOSANITARIA DE PERSONAS DEPENDIENTES EN INSTITUCIONES SOCIALES,0,2025-07-20 12:33:07
+36,Grupo Lincea,TNFnew DOCENCIA DE LA FORMACIÓN PROFESIONAL PARA EL EMPLEO,https://grupolincea.es/tnfnew-docencia-de-la-formacion-profesional-para-el-empleo/,No especificado,Formato de fecha no reconocido,"CURSO – HABILITACIÓN PARA LA DOCENCIA EN GRADOS A,B Y C DEL SISTEMA DE FORMACIÓN PROFESIONAL",0,2025-07-20 12:33:07
+53,FormacionLine,ESPECIALISTA EN MARKETING DIGITAL,https://formacionline.com/courses/comm15-especialista-en-marketing-digital/,2025-07-17,2025-08-22,08:30 A 14:30,130,2025-07-20 12:33:07
+54,FormacionLine,GESTIÓN DE EQUIPOS,https://formacionline.com/courses/gestion-de-equipos/,2025-08-01,2025-08-14,16:00 a 20:00h,40,2025-07-20 12:33:07
+55,FormacionLine,PROMOCIÓN E INTERVENCIÓN SOCIEDUCATIVA CON PERSONAS CON DISCAPACIDAD,https://formacionline.com/courses/ssce0111-socieducativa-discapacidad/,2025-08-18,2025-10-24,08:30 A 14:30,395,2025-07-20 12:33:07
+56,FormacionLine,ACTUACIONES FRENTE AL ACOSO SEXUAL,https://formacionline.com/courses/actuaciones-frente-al-acoso-sexual/,2025-08-18,2025-08-20,16:00 a 20:00h,12,2025-07-20 12:33:07
+57,FormacionLine,ATENCIÓN SOCIOSANITARIA A PERSONAS DEPENDIENTES CON ALZHEIMER U OTRAS DEMENCIAS EN INSTITUCIONES SOCIALES,https://formacionline.com/courses/sscg01-alzaheimer/,2025-08-19,2025-09-16,08:30 A 14:30,100,2025-07-20 12:33:07
+58,FormacionLine,VIOLENCIA DE GÉNERO,https://formacionline.com/courses/violencia-de-genero-2/,2025-08-21,2025-09-08,16:00 a 20:00h,50,2025-07-20 12:33:07
+59,FormacionLine,MEJORA DE LA ACCIÓN SOCIAL A TRAVÉS DE LA TRANSFORMACIÓN DIGITAL,https://formacionline.com/courses/sscg08-transformacion-digital/,2025-09-18,2025-11-13,08:30 A 14:30,220,2025-07-20 12:33:07
+60,FormacionLine,GESTIÓN ADMINISTRATIVA Y ECONÓMICO-FINANCIERA DE PEQUEÑOS NEGOCIOS O MICROEMPRESAS,https://formacionline.com/courses/gestion-financiera-negocios-tnf/,2025-09-09,2025-10-20,16:00 a 20:00h,120,2025-07-20 12:33:07
+61,FormacionLine,ALEMÁN B1,https://formacionline.com/courses/ssce08-aleman-b1-tenerife/,2025-09-01,2025-10-31,09:00 A 15:00,240,2025-07-20 12:33:07
