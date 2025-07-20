@@ -31,22 +31,6 @@ id,centro_formacion,nombre_curso,url_curso,fecha_inicio,fecha_fin,horario,horas,
 127,ICSE,INGLÉS B2,https://www.icse.es/cursos/64,2025-07-23,2025-10-06,No disponible en listado,0,2025-07-20 12:21:26
 128,ICSE,INGLÉS B2,https://www.icse.es/cursos/85,2025-07-29,2025-10-10,No disponible en listado,0,2025-07-20 12:21:26
 129,ICSE,INGLÉS C1,https://www.icse.es/cursos/70,2025-10-13,2025-12-15,No disponible en listado,0,2025-07-20 12:21:26
-130,Grupo Lincea,No se puede acceder a este sitio web,https://grupolincea.es/ingles-a1-ingles-a2/,No especificado,No especificado,No especificado,0,2025-07-20 12:21:26
-132,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-administrativas-en-la-relacion-con-el-cliente/,Formato de fecha no reconocido,Formato de fecha no reconocido,15:00 a 21:00,0,2025-07-20 12:21:26
-133,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-auxiliares-de-comercio/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:21:26
-134,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-de-gestion-del-pequeno-comercio/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:21:26
-135,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-actividades-de-venta/,Formato de fecha no reconocido,Formato de fecha no reconocido,8.30 – 14.30,0,2025-07-20 12:21:26
-136,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-formacion-de-formadores-en-e-learning/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 – 14:30,0,2025-07-20 12:21:26
-137,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-gestion-comercial-de-ventas/,2025-08-04,2025-12-02,8:30 – 15:00,0,2025-07-20 12:21:26
-138,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-gestion-contable-y-gestion-administrativa-para-auditoria-2/,Formato de fecha no reconocido,Formato de fecha no reconocido,Por determinar,0,2025-07-20 12:21:26
-139,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-gestion-integrada-de-rrhh/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:21:26
-140,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-ingles-a1/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:21:26
-141,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-operaciones-auxiliares-de-servicios-administrativos/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 a 14:30,0,2025-07-20 12:21:26
-142,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-seguridad-informatica/,Formato de fecha no reconocido,Formato de fecha no reconocido,POR DETERMINAR,0,2025-07-20 12:21:26
-143,Grupo Lincea,REQUISITOS,https://grupolincea.es/tnf-servicios-de-bar-y-cafeteria/,Formato de fecha no reconocido,Formato de fecha no reconocido,8:30 – 14:30,0,2025-07-20 12:21:26
-144,Grupo Lincea,EN ESTE CURSO APRENDERÁS,https://grupolincea.es/tnf-servicios-de-restaurante-2/,Formato de fecha no reconocido,Formato de fecha no reconocido,CURSO – SERVICIOS DE RESTAURANTE,0,2025-07-20 12:21:26
-145,Grupo Lincea,EN ESTE CURSO APRENDERÁS,https://grupolincea.es/tnf_new-atencion-sociosanitaria-de-personas-dependientes-en-instituciones/,Formato de fecha no reconocido,Formato de fecha no reconocido,CURSO – ATENCIÓN SOCIOSANITARIA DE PERSONAS DEPENDIENTES EN INSTITUCIONES SOCIALES,0,2025-07-20 12:21:26
-146,Grupo Lincea,EN ESTE CURSO APRENDERÁS,https://grupolincea.es/tnfnew-docencia-de-la-formacion-profesional-para-el-empleo/,No especificado,Formato de fecha no reconocido,"CURSO – HABILITACIÓN PARA LA DOCENCIA EN GRADOS A,B Y C DEL SISTEMA DE FORMACIÓN PROFESIONAL",0,2025-07-20 12:21:26
 45,Insforca,INGLÉS B1,https://www.insforca.com/cursos/ingles-b1/,2025-08-13,2025-10-15,No disponible en listado,265,2025-07-20 00:31:56
 46,Insforca,INGLÉS B2,https://www.insforca.com/cursos/ingles-b2-4/,2025-10-17,2025-12-19,No disponible en listado,265,2025-07-20 00:31:56
 47,Insforca,EXCEL AVANZADO Y POWER BI,https://www.insforca.com/cursos/excel-avanzado-y-power-bi/,2025-07-30,2025-09-10,No disponible en listado,175,2025-07-20 00:31:56

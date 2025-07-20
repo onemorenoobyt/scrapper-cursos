@@ -1,4 +1,4 @@
-# scrapers/inpsi_scraper.py (VERSIÓN FINAL SIN VISITAR DETALLES)
+# scrapers/inpsi_scraper.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -44,13 +44,13 @@ def scrape():
             driver.get(current_url)
             urls_visitadas.add(current_url)
             
-            try: # El banner de cookies puede aparecer en cualquier página de la paginación
+            try:
                 cookie_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "cmplz-accept")))
                 driver.execute_script("arguments[0].click();", cookie_button)
                 print("  -> Banner de cookies aceptado.")
                 time.sleep(2)
             except Exception:
-                pass # Si no hay banner, continuamos
+                pass
 
             WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.ae-post-list-item")))
             
@@ -58,15 +58,14 @@ def scrape():
 
             for card in course_cards:
                 try:
-                    # Filtramos por sede ANTES de procesar para evitar cursos de Candelaria, etc.
                     ubicacion_tags = card.find_elements(By.CSS_SELECTOR, "p.ae-term-item.ae-term-candelaria, p.ae-term-item.ae-term-online")
                     if ubicacion_tags:
-                        continue # Si encuentra 'Candelaria' u 'Online', salta esta tarjeta
+                        continue
 
                     nombre = card.find_element(By.CSS_SELECTOR, 'h2.titulo-curso').text.strip()
-                    url_curso = card.find_element(By.CSS_SELECTOR, 'a.elementor-button-link').get_attribute('href')
+                    url_curso_elements = card.find_elements(By.CSS_SELECTOR, 'a.elementor-button-link')
+                    url_curso = url_curso_elements[0].get_attribute('href') if url_curso_elements else START_URL
                     
-                    # Extraer fechas y otros datos directamente de la tarjeta
                     fecha_inicio_str = card.find_element(By.CSS_SELECTOR, '.elementor-element-854c6dd h3.date').text.strip()
                     fecha_fin_str = card.find_element(By.CSS_SELECTOR, '.elementor-element-9caebe9 h3.date').text.strip()
                     horario = card.find_element(By.CSS_SELECTOR, '.elementor-element-74ca3a1 h2.ae-acf-content-wrapper').text.replace('Horario:', '').strip()
@@ -81,7 +80,6 @@ def scrape():
                     cursos_encontrados.append(curso_data)
 
                 except Exception as e:
-                    # print(f"  -> Advertencia al procesar una tarjeta de INPSI: {e}")
                     continue
 
             try:
