@@ -1,4 +1,4 @@
-# scrapers/inpsi_scraper.py
+# Contenido de scrapers/inpsi_scraper.py (VERSIÓN FINAL Y ROBUSTA)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -15,78 +15,94 @@ START_URL = "https://www.inpsi.com/cursos/"
 CENTRO_NOMBRE = "INPSI"
 
 def _normalize_date(date_string):
-    if "No especificado" in date_string: return date_string
+    """Convierte una cadena de fecha dd/mm/yyyy a YYYY-MM-DD."""
+    if not date_string or date_string.isspace():
+        return "No disponible"
     try:
         return datetime.strptime(date_string.strip(), '%d/%m/%Y').strftime('%Y-%m-%d')
-    except ValueError:
-        return "Formato de fecha no reconocido"
+    except (ValueError, IndexError):
+        return "No disponible"
 
 def scrape():
+    """Scraper dinámico para INPSI que maneja paginación y extrae detalles."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
     options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument(f"user-agent={config.HEADERS['User-Agent']}")
-    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
     
     try:
-        current_url = START_URL
-        urls_visitadas = set()
+        driver.get(START_URL)
+        print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
         
-        while current_url:
-            if current_url in urls_visitadas: break
-            
-            print(f"Procesando página de listado: {current_url}")
-            driver.get(current_url)
-            urls_visitadas.add(current_url)
-            
-            try:
-                cookie_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "cmplz-accept")))
-                driver.execute_script("arguments[0].click();", cookie_button)
-                print("  -> Banner de cookies aceptado.")
-                time.sleep(2)
-            except Exception:
-                pass
+        try:
+            cookie_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "cmplz-accept")))
+            driver.execute_script("arguments[0].click();", cookie_button)
+            print("  -> Banner de cookies aceptado.")
+        except Exception:
+            print("  -> No se encontró el banner de cookies.")
 
-            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "article.ae-post-list-item")))
+        current_page = 1
+        while True:
+            print(f"  -> Procesando página {current_page}...")
             
-            course_cards = driver.find_elements(By.CSS_SELECTOR, "article.ae-post-list-item")
+            # CORRECCIÓN DEFINITIVA: Esperamos a que el contenedor principal esté presente
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.ae-post-list-wrapper")))
+            time.sleep(2) # Pausa extra para que el JS renderice las tarjetas
+            
+            course_cards = driver.find_elements(By.CSS_SELECTOR, 'article.ae-post-list-item')
+            if not course_cards:
+                print("  -> No se encontraron tarjetas de curso en la página actual.")
+                break
 
             for card in course_cards:
                 try:
-                    ubicacion_tags = card.find_elements(By.CSS_SELECTOR, "p.ae-term-item.ae-term-candelaria, p.ae-term-item.ae-term-online")
-                    if ubicacion_tags:
+                    # Filtro de Sede/Modalidad
+                    if card.find_elements(By.CSS_SELECTOR, "p.ae-term-candelaria, p.ae-term-online"):
                         continue
+                    
+                    nombre = card.find_element(By.CSS_SELECTOR, 'p.elementor-heading-title').text.strip()
+                    url_curso = card.find_element(By.CSS_SELECTOR, 'a.elementor-button').get_attribute('href')
+                    
+                    fechas_elements = card.find_elements(By.CSS_SELECTOR, 'h3.date')
+                    fecha_inicio = fechas_elements[0].text if len(fechas_elements) > 0 else "No disponible"
+                    fecha_fin = fechas_elements[1].text if len(fechas_elements) > 1 else "No disponible"
 
-                    nombre = card.find_element(By.CSS_SELECTOR, 'h2.titulo-curso').text.strip()
-                    url_curso_elements = card.find_elements(By.CSS_SELECTOR, 'a.elementor-button-link')
-                    url_curso = url_curso_elements[0].get_attribute('href') if url_curso_elements else START_URL
-                    
-                    fecha_inicio_str = card.find_element(By.CSS_SELECTOR, '.elementor-element-854c6dd h3.date').text.strip()
-                    fecha_fin_str = card.find_element(By.CSS_SELECTOR, '.elementor-element-9caebe9 h3.date').text.strip()
-                    horario = card.find_element(By.CSS_SELECTOR, '.elementor-element-74ca3a1 h2.ae-acf-content-wrapper').text.replace('Horario:', '').strip()
-                    
-                    horas_str = "0"
+                    horario = "No disponible"
                     try:
-                        horas_text = card.find_element(By.CSS_SELECTOR, '.elementor-element-1a6008f h2.ae-acf-content-wrapper').text
-                        horas_str = ''.join(filter(str.isdigit, horas_text))
-                    except: pass
-                        
-                    curso_data = { "centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso, "inicio": _normalize_date(fecha_inicio_str), "fin": _normalize_date(fecha_fin_str), "horario": horario, "horas": int(horas_str) if horas_str else 0 }
-                    cursos_encontrados.append(curso_data)
+                        horario_element = card.find_element(By.XPATH, ".//h2[contains(., 'Horario:')]")
+                        horario = horario_element.text.replace('Horario:', '').strip()
+                    except Exception:
+                        pass
+                    
+                    horas = "0"
+                    try:
+                        horas_element = card.find_element(By.XPATH, ".//h2[contains(., 'horas')]")
+                        horas = ''.join(filter(str.isdigit, horas_element.text))
+                    except Exception:
+                        pass
 
+                    curso_data = {
+                        "centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso,
+                        "inicio": _normalize_date(fecha_inicio), "fin": _normalize_date(fecha_fin),
+                        "horario": horario, "horas": int(horas) if horas else 0
+                    }
+                    cursos_encontrados.append(curso_data)
                 except Exception as e:
+                    print(f"  -> ADVERTENCIA: Error procesando tarjeta de INPSI. Saltando. Razón: {e}")
                     continue
 
+            # Paginación
             try:
                 next_page_link = driver.find_element(By.CSS_SELECTOR, 'a.next.page-numbers')
-                current_url = next_page_link.get_attribute('href')
-            except:
-                current_url = None
+                print(f"  -> Navegando a la página {current_page + 1}...")
+                driver.execute_script("arguments[0].click();", next_page_link)
+                WebDriverWait(driver, 20).until(EC.staleness_of(course_cards[0]))
+                current_page += 1
+            except Exception:
+                print("  -> No hay más páginas. Finalizando paginación.")
+                break
                 
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
@@ -96,3 +112,7 @@ def scrape():
         
     print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos encontrados.")
     return cursos_encontrados
+
+if __name__ == '__main__':
+    cursos = scrape()
+    print(cursos)
