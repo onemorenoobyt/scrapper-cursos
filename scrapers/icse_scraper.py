@@ -18,7 +18,10 @@ def _normalize_date(date_string):
     if not date_string or date_string.isspace():
         return "No disponible"
     try:
-        return datetime.strptime(date_string.strip(), '%d/%m/%Y').strftime('%Y-%m-%d')
+        # Limpiamos cualquier texto extra antes de procesar
+        cleaned_date = date_string.strip()
+        dt_object = datetime.strptime(cleaned_date, '%d/%m/%Y')
+        return dt_object.strftime('%Y-%m-%d')
     except (ValueError, IndexError):
         return "No disponible"
 
@@ -38,7 +41,7 @@ def scrape():
         driver.get(URL)
         print(f"  -> Página principal de {CENTRO_NOMBRE} cargada.")
         
-        # CORRECCIÓN DEFINITIVA: Espera explícita para el contenido de Livewire.
+        # Espera explícita y robusta para el contenido de Livewire.
         # Esperamos a que el texto de la sede dentro de la primera tarjeta sea visible.
         WebDriverWait(driver, 30).until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "div.course-card span.headquarter"))
@@ -47,7 +50,7 @@ def scrape():
         
         course_cards = driver.find_elements(By.CSS_SELECTOR, 'div.course-card')
         
-        print(f"  -> {len(course_cards)} tarjetas de curso encontradas. Filtrando por Tenerife...")
+        print(f"  -> {len(course_cards)} tarjetas de curso encontradas. Filtrando por Santa Cruz...")
 
         for card in course_cards:
             try:
@@ -61,15 +64,15 @@ def scrape():
                 nombre = title_anchor.text.strip()
                 url_curso = card.find_element(By.TAG_NAME, 'a').get_attribute('href')
                 
-                # Buscamos la fecha dentro del 'li' que contiene el icono del calendario
-                fechas_li = card.find_element(By.XPATH, ".//li[contains(., '/')]") # Busca un li que contenga una barra
+                # CORRECCIÓN: Buscamos la fecha y la separamos
+                fechas_li = card.find_element(By.XPATH, ".//li[contains(., '/')]")
                 fechas_str = fechas_li.text.strip()
                 
                 fecha_inicio, fecha_fin = "No disponible", "No disponible"
                 if ' - ' in fechas_str:
-                    fechas_parts = [d.strip() for d in fechas_str.split(' - ')]
-                    fecha_inicio = fechas_parts[0]
-                    fecha_fin = fechas_parts[1]
+                    parts = fechas_str.split(' - ')
+                    fecha_inicio = parts[0]
+                    fecha_fin = parts[1]
 
                 curso_data = {
                     "centro": CENTRO_NOMBRE,
@@ -77,8 +80,8 @@ def scrape():
                     "url": url_curso,
                     "inicio": _normalize_date(fecha_inicio),
                     "fin": _normalize_date(fecha_fin),
-                    "horario": "No disponible en listado",
-                    "horas": 0  # Este dato no está en la tarjeta
+                    "horario": "No disponible",
+                    "horas": 0
                 }
                 cursos_encontrados.append(curso_data)
 

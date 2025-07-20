@@ -1,4 +1,4 @@
-# Contenido de scrapers/auraformacion_scraper.py (VERSIÓN FINAL CON DEDUPLICACIÓN)
+# Contenido de scrapers/auraformacion_scraper.py (VERSIÓN FINAL Y ROBUSTA)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -14,53 +14,72 @@ START_URL = "https://www.auraformacion.es/formacion.html"
 CENTRO_NOMBRE = "Aura Formación"
 
 def _normalize_date(date_string):
-    if "No especificado" in date_string: return "No disponible"
+    """Convierte una cadena de texto 'dd de mes de yyyy' a 'YYYY-MM-DD'."""
+    if "No especificado" in date_string or not date_string: return "No disponible"
     meses = {'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'}
     try:
         parts = date_string.lower().split(' de ')
         day = int(parts[0])
         month = meses[parts[1]]
         year = int(parts[2])
-        return f"{year}-{month:02d}-{day:02d}"
+        return f"{year}-{month}-{day:02d}"
     except (ValueError, IndexError, KeyError):
         return "No disponible"
 
 def _scrape_detail_page(driver, course_url):
+    """Extrae datos de la página de detalle de un curso."""
     try:
         driver.get(course_url)
-        info_box = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CLASS_NAME, "cuadro_informacion")))
-        info_text = info_box.text
+        # Espera a que el contenedor principal de la información sea visible
+        info_box = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "cuadro_informacion"))
+        )
         
-        if "Ramón y Cajal" not in info_text and "TF" not in info_text: return None
-             
+        # --- Filtro de Sede: Buscamos la palabra clave "Ramón y Cajal" o "TF" ---
+        if "Ramón y Cajal" not in info_box.text and "TF" not in info_box.text:
+            return None
+
+        # --- Si pasa el filtro, extraemos los datos ---
         nombre = driver.find_element(By.TAG_NAME, 'h1').text.strip()
+        
         fecha_inicio, fecha_fin, horas, horario = "No especificado", "No especificado", "0", "No especificado"
         
-        lines = info_text.split('\n')
-        for line in lines:
-            if line.startswith("Fecha inicio:"): fecha_inicio = line.split(':')[1].strip()
-            elif line.startswith("Fecha fin:"): fecha_fin = line.split(':')[1].strip()
-            elif line.startswith("Horas totales:"): horas = line.split(':')[1].replace('horas.', '').strip()
-            elif line.startswith("Horario:"): horario = line.split(':')[1].strip()
+        # Leemos el texto de los párrafos dentro del cuadro de información
+        paragraphs = info_box.find_elements(By.TAG_NAME, 'p')
+        for p in paragraphs:
+            text = p.text
+            if text.startswith("Fecha inicio:"):
+                fecha_inicio = text.replace("Fecha inicio:", "").strip()
+            elif text.startswith("Fecha fin:"):
+                fecha_fin = text.replace("Fecha fin:", "").strip()
+            elif text.startswith("Horas totales:"):
+                horas = ''.join(filter(str.isdigit, text))
+            elif text.startswith("Horario:"):
+                horario = text.replace("Horario:", "").strip()
         
-        if fecha_inicio == "No especificado": return None
+        if fecha_inicio == "No especificado":
+            return None
 
         return {
             "centro": CENTRO_NOMBRE, "nombre": nombre, "url": course_url,
-            "inicio": _normalize_date(fecha_inicio), "fin": _normalize_date(fecha_fin),
-            "horario": horario, "horas": int(horas) if horas.isdigit() else 0
+            "inicio": _normalize_date(fecha_inicio),
+            "fin": _normalize_date(fecha_fin),
+            "horario": horario,
+            "horas": int(horas) if horas else 0
         }
-    except Exception:
+    except Exception as e:
+        print(f"  -> ADVERTENCIA: Error procesando detalle {course_url}. Razón: {e}")
         return None
 
 def scrape():
+    """Scraper dinámico en dos fases para Aura Formación."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
     options.add_argument('--headless=new')
     
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     cursos_encontrados = []
-    # CORRECCIÓN: Usamos un set para guardar las claves únicas y evitar duplicados
+    # Usamos un set para evitar procesar cursos duplicados
     cursos_unicos = set()
     
     try:
@@ -83,23 +102,17 @@ def scrape():
         for link in links_a_visitar:
             curso_data = _scrape_detail_page(driver, link)
             if curso_data:
-                # CORRECCIÓN: Creamos una clave única con los datos relevantes
-                clave_unica = (
-                    curso_data['nombre'],
-                    curso_data['inicio'],
-                    curso_data['horario']
-                )
-                
-                # Si la clave no ha sido vista antes, añadimos el curso
+                clave_unica = (curso_data['nombre'], curso_data['inicio'], curso_data['horario'])
                 if clave_unica not in cursos_unicos:
                     cursos_encontrados.append(curso_data)
                     cursos_unicos.add(clave_unica)
+                    print(f"    -> EXTRAÍDO: {curso_data['nombre']}")
     except Exception as e:
         print(f"  !!! ERROR CRÍTICO en el scraper de {CENTRO_NOMBRE}: {e}")
         driver.save_screenshot(f"debug_screenshot_{CENTRO_NOMBRE.lower().replace(' ', '')}.png")
     finally:
         driver.quit()
-    print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos únicos de Tenerife encontrados.")
+    print(f"Scraper de {CENTRO_NOMBRE} finalizado. {len(cursos_encontrados)} cursos de Tenerife encontrados.")
     return cursos_encontrados
 
 if __name__ == '__main__':

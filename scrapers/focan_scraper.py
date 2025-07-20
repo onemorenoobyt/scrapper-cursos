@@ -1,4 +1,4 @@
-# Contenido de scrapers/focan_scraper.py (VERSIÓN FINAL CORREGIDA Y ROBUSTA)
+# Contenido de scrapers/focan_scraper.py (VERSIÓN FINAL Y ROBUSTA)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -20,8 +20,32 @@ def _normalize_date(date_string):
     except (ValueError, IndexError):
         return "No disponible"
 
+def _extract_name_from_url(url):
+    """Extrae y limpia el nombre del curso desde el slug de la URL."""
+    try:
+        # Obtiene la última parte de la URL (el "slug")
+        slug = url.strip('/').split('/')[-1]
+        
+        # Elimina prefijos comunes
+        prefixes = ["tf-", "sede2-", "isbs-"]
+        for prefix in prefixes:
+            if slug.startswith(prefix):
+                slug = slug[len(prefix):]
+        
+        # Elimina sufijos comunes
+        if slug.endswith("-puente-inclusion"):
+            slug = slug.replace("-puente-inclusion", "")
+
+        # Reemplaza guiones por espacios y capitaliza
+        name = slug.replace('-', ' ').title()
+        
+        # Reemplaza 'Tf' por 'Tenerife' para mayor claridad
+        return name.replace("Tf", "Tenerife")
+    except Exception:
+        return "Nombre no extraíble de la URL"
+
 def scrape():
-    """Scraper robusto para Focan que extrae datos de la estructura HTML real."""
+    """Scraper robusto para Focan que extrae el nombre desde la URL."""
     print(f"Iniciando scraper para {CENTRO_NOMBRE} con Selenium...")
     options = webdriver.ChromeOptions()
     options.add_argument('--headless=new')
@@ -49,16 +73,14 @@ def scrape():
         
         for item in course_items:
             try:
-                # CORRECCIÓN DEFINITIVA: El título está dentro de la imagen, en el atributo 'alt'
-                title_element = item.find_element(By.CLASS_NAME, 'result-image')
-                nombre = title_element.get_attribute('alt').replace('Imagen del curso', '').strip()
+                # CORRECCIÓN DEFINITIVA: Extraemos la URL y procesamos el nombre a partir de ella
                 url_curso = item.find_element(By.TAG_NAME, 'a').get_attribute('href')
+                nombre = _extract_name_from_url(url_curso)
                 
-                # Extracción robusta de los datos del 'result-info'
                 info_div = item.find_element(By.CLASS_NAME, 'result-info')
                 info_text = info_div.text
                 
-                fecha_inicio, fecha_fin, horario = "No disponible", "No disponible", "No disponible"
+                fecha_inicio, fecha_fin = "No disponible", "No disponible"
                 
                 lines = info_text.split('\n')
                 for line in lines:
@@ -66,17 +88,11 @@ def scrape():
                         fecha_inicio = line.split(':')[1].strip()
                     elif "Fin:" in line:
                         fecha_fin = line.split(':')[1].strip()
-                    elif "Horario:" in line:
-                        horario = line.split(':')[1].strip()
 
                 curso_data = {
-                    "centro": CENTRO_NOMBRE,
-                    "nombre": nombre,
-                    "url": url_curso,
-                    "inicio": _normalize_date(fecha_inicio),
-                    "fin": _normalize_date(fecha_fin),
-                    "horario": horario,
-                    "horas": 0
+                    "centro": CENTRO_NOMBRE, "nombre": nombre, "url": url_curso,
+                    "inicio": _normalize_date(fecha_inicio), "fin": _normalize_date(fecha_fin),
+                    "horario": "No disponible", "horas": 0
                 }
                 cursos_encontrados.append(curso_data)
             except Exception as e:
