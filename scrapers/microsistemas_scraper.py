@@ -1,4 +1,4 @@
-# scrapers/microsistemas_scraper.py (VERSIÓN FINAL CON TABLAS)
+# scrapers/microsistemas_scraper.py (VERSIÓN FINAL)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -43,7 +43,6 @@ def scrape():
         time.sleep(5) 
 
         try:
-            # Aunque no sea el problema principal, es buena práctica manejarlo
             chat_iframe = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "lbContactIframe")))
             driver.switch_to.frame(chat_iframe)
             close_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "lbContactHeaderMinimize")))
@@ -55,21 +54,21 @@ def scrape():
             print("  -> No se encontró el pop-up de chat o no fue necesario cerrarlo.")
             driver.switch_to.default_content()
 
-        # --- CORRECCIÓN DEFINITIVA: Buscamos las tablas ---
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.tablepress")))
         print(f"  -> Contenedor de cursos (table.tablepress) encontrado en {CENTRO_NOMBRE}.")
         
         tablas = driver.find_elements(By.CSS_SELECTOR, 'table.tablepress')
-        
-        if not tablas:
-            print(f"  !!! ADVERTENCIA: No se encontraron tablas de cursos en {CENTRO_NOMBRE}.")
-            return []
-        
         print(f"  -> {len(tablas)} tablas encontradas. Procesando...")
 
-        for tabla in tablas:
+        for i, tabla in enumerate(tablas):
             try:
-                rows = tabla.find_element(By.TAG_NAME, 'tbody').find_elements(By.TAG_NAME, 'tr')
+                # CORRECCIÓN: Buscamos tbody, si no existe, saltamos esta tabla
+                tbody = tabla.find_elements(By.TAG_NAME, 'tbody')
+                if not tbody:
+                    print(f"    -> Tabla #{i+1} no tiene tbody, se ignora.")
+                    continue
+                
+                rows = tbody[0].find_elements(By.TAG_NAME, 'tr')
                 for row in rows:
                     cols = row.find_elements(By.TAG_NAME, 'td')
                     if len(cols) < 5: continue
@@ -91,7 +90,7 @@ def scrape():
                     }
                     cursos_encontrados.append(curso_data)
             except Exception as e:
-                print(f"  -> Error al procesar una tabla de {CENTRO_NOMBRE}: {e}")
+                print(f"  -> Error al procesar la tabla #{i+1} de {CENTRO_NOMBRE}: {e}")
                 continue
     
     except Exception as e:
