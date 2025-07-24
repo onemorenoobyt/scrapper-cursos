@@ -1,4 +1,4 @@
-# Contenido de main.py (VERSIÓN RESILIENTE FINAL)
+# Contenido de main.py (VERSIÓN FINAL CON ACTUALIZACIÓN PARCIAL)
 import pandas as pd
 import sqlite3
 import database
@@ -19,7 +19,7 @@ from scrapers import (
 
 def main():
     """Función principal del programa de scraping."""
-    scrape_start_time = datetime.now() # Guardamos la hora de inicio
+    scrape_start_time = datetime.now()
     print(f"--- INICIANDO PROCESO DE SCRAPING a las {scrape_start_time.strftime('%Y-%m-%d %H:%M:%S')} ---")
     database.setup_database()
     
@@ -63,15 +63,13 @@ def main():
             cursos_del_scraper = scraper_module.scrape()
             todos_los_cursos.extend(cursos_del_scraper)
             
-            # Si el scraper finaliza y ha encontrado al menos un curso, lo consideramos un éxito.
             if cursos_del_scraper:
-                # El nombre del centro se obtiene del primer curso encontrado
                 center_name = cursos_del_scraper[0]['centro']
                 successful_centers.add(center_name)
         except Exception as e:
             print(f"---! ERROR CRÍTICO en el scraper {scraper_module.__name__}: {e} !---")
 
-    print(f"\nProceso de scraping finalizado. Total de cursos nuevos/actualizados: {len(todos_los_cursos)}")
+    print(f"\nProceso de scraping finalizado. Total de cursos nuevos/actualizados en esta ejecución: {len(todos_los_cursos)}")
     
     if todos_los_cursos:
         print("Insertando y actualizando datos en la base de datos...")
@@ -79,14 +77,14 @@ def main():
             database.insert_curso(curso)
         print("Datos insertados correctamente.")
     
-    # --- LÓGICA DE PURGA INTELIGENTE ---
-    # Solo se purgan los cursos de los centros que han sido scrapeados con éxito.
-    # Si un scraper falla, sus datos antiguos se conservan.
-    if not scraper_a_ejecutar_nombre: # Solo purgar en modo normal, no en depuración
+    # --- LÓGICA DE PURGA ---
+    # Si estamos en modo normal, purgamos los cursos antiguos de los centros que funcionaron.
+    # Si estamos en modo depuración, TAMBIÉN purgamos, pero solo para el centro que hemos ejecutado.
+    if successful_centers:
         print("\nIniciando purga de cursos antiguos de los centros scrapeados con éxito...")
         database.purge_old_courses_by_center(successful_centers, scrape_start_time)
     
-    print("\nExportando resultados a CSV...")
+    print("\nExportando la base de datos completa a CSV...")
     conn = sqlite3.connect(database.DB_NAME)
     df = pd.read_sql_query("SELECT * FROM cursos ORDER BY fecha_inicio DESC", conn)
     conn.close()
@@ -95,7 +93,7 @@ def main():
         df.to_csv("cursos_actualizados.csv", index=False)
         print("Exportación finalizada. Revisa el fichero 'cursos_actualizados.csv'")
     else:
-        print("No se encontraron cursos para exportar a CSV.")
+        print("La base de datos está vacía. No se ha generado el CSV.")
 
     print("--- PROCESO COMPLETADO ---")
 
